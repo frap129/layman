@@ -29,7 +29,7 @@ parser.add_option("-n",
                   "--nested",
                   dest="move_nested",
                   action="store_true",
-                  help="Move windows which are nested deeper than workspace level.")
+                  help="Also move new windows which are created in nested containers.")
 (options, args) = parser.parse_args()
 
 

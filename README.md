@@ -46,9 +46,12 @@ Options:
                         List of workspaces that should be ignored.
   -o HDMI-0,DP-0,.. , --outputs=HDMI-0,DP-0,..
                         List of outputs that should be used instead of all.
-  -n, --nested          Move windows which are nested deeper than workspace
-                        level.
+  -n, --nested          Also move new windows which are created in a nested container.
 ```
+
+## TODO
+- fix stack behaviour when master window is closed
+- make stack layout configurable (stacked, tabbed, splith, splitv)
 ---
 ## Swallow
 Additionally there is a simple script [i3-swallow-stack.py](./i3-swallow-stack.py) which enables a simple swallow mechanism by utilizing the stack/tabbed layout default to i3.
