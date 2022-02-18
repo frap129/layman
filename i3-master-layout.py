@@ -100,7 +100,7 @@ def on_window_focus(c, e):
         return
 
     workspace = focused_window.workspace()
-    
+
     if options.disable_on_close is not True:
         # master window disappears and only stack container left
         if len(workspace.nodes) == 1:
@@ -109,7 +109,6 @@ def on_window_focus(c, e):
             # now the stack if it exists is first node and gets moved to the end of workspace
             move_window(c, workspace.nodes[0], workspace)
 
-
     if len(workspace.nodes) < 2:
         return
 
@@ -117,6 +116,7 @@ def on_window_focus(c, e):
     # last window is also 2nd window
     if last == workspace.nodes[1] and last.layout != "splitv":
         c.command("[con_id=%d] splitv" % last.id)
+
 
 def main():
     c = Connection()

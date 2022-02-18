@@ -15,7 +15,7 @@
 
 * works independant from i3 state (no permanent marks required to keep track)
 
-* if master windows disappears, get new master window from stack (does only really work if you don't break the 2 column layout)
+* if master window disappears, get new master from stack (does only really work if you don't break the 2 column layout)
 
 ![master-layout](./i3-master-layout-example.gif)
 
@@ -59,6 +59,7 @@ Options:
 ## TODO
 - ~~fix stack behaviour when master window is closed~~
 - make stack layout configurable (stacked, tabbed, splith, splitv)
+- fix rearragement when master gets float window
 - maybe a focused based master selection (focused will get master automatically)
 ---
 ## Swallow
