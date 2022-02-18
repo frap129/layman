@@ -15,7 +15,7 @@
 
 * works independant from i3 state (no permanent marks required to keep track)
 
-* if master windows disappears, get new master window from stack (does only really work if you don't break the initial layout)
+* if master windows disappears, get new master window from stack (does only really work if you don't break the 2 column layout)
 
 ![master-layout](./i3-master-layout-example.gif)
 
