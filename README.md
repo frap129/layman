@@ -15,6 +15,8 @@
 
 * works independant from i3 state (no permanent marks required to keep track)
 
+* if master windows disappears, get new master window from stack (does only really work if you don't break the initial layout)
+
 ![master-layout](./i3-master-layout-example.gif)
 
 ## Install
@@ -57,6 +59,7 @@ Options:
 ## TODO
 - ~~fix stack behaviour when master window is closed~~
 - make stack layout configurable (stacked, tabbed, splith, splitv)
+- maybe a focused based master selection (focused will get master automatically)
 ---
 ## Swallow
 Additionally there is a simple script [i3-swallow-stack.py](./i3-swallow-stack.py) which enables a simple swallow mechanism by utilizing the stack/tabbed layout default to i3.
