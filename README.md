@@ -40,17 +40,22 @@ exec_always --no-startup-id $HOME/.i3/i3-master-layout.py
 ## Options
 ```
 $ ./i3-master-layout.py -h
+Usage: i3-master-layout.py [options]
+
 Options:
   -h, --help            show this help message and exit
-  -e ws1,ws2,.. , --exclude-workspaces=ws1,ws2,..
+  -e ws1,ws2,.. , --exclude-workspaces=ws1,ws2,.. 
                         List of workspaces that should be ignored.
-  -o HDMI-0,DP-0,.. , --outputs=HDMI-0,DP-0,..
+  -o HDMI-0,DP-0,.. , --outputs=HDMI-0,DP-0,.. 
                         List of outputs that should be used instead of all.
-  -n, --nested          Also move new windows which are created in a nested container.
+  -n, --nested          Also move new windows which are created in nested
+                        containers.
+  --disable-rearrange   Disable the rearrangement of windows when the master
+                        window is closed.
 ```
 
 ## TODO
-- fix stack behaviour when master window is closed
+- ~~fix stack behaviour when master window is closed~~
 - make stack layout configurable (stacked, tabbed, splith, splitv)
 ---
 ## Swallow
