@@ -51,7 +51,7 @@ Options:
   -n, --nested          Also move new windows which are created in nested
                         containers.
   --disable-rearrange   Disable the rearrangement of windows when the master
-                        window is closed.
+                        window disappears.
 ```
 
 ## TODO

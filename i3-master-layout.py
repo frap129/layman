@@ -30,7 +30,7 @@ parser.add_option("-n", "--nested", dest="move_nested", action="store_true", hel
 parser.add_option("--disable-rearrange",
                   dest="disable_on_close",
                   action="store_true",
-                  help="Disable the rearrangement of windows when the master window is closed.")
+                  help="Disable the rearrangement of windows when the master window disappears.")
 (options, args) = parser.parse_args()
 
 
@@ -100,6 +100,15 @@ def on_window_focus(c, e):
         return
 
     workspace = focused_window.workspace()
+    
+    if options.disable_on_close is not True:
+        # master window disappears and only stack container left
+        if len(workspace.nodes) == 1:
+            # move focused window (usually last focused window of stack) back to workspace level
+            move_window(c, focused_window, workspace)
+            # now the stack if it exists is first node and gets moved to the end of workspace
+            move_window(c, workspace.nodes[0], workspace)
+
 
     if len(workspace.nodes) < 2:
         return
@@ -109,28 +118,10 @@ def on_window_focus(c, e):
     if last == workspace.nodes[1] and last.layout != "splitv":
         c.command("[con_id=%d] splitv" % last.id)
 
-
-def on_window_close(c, e):
-    focused_window = grab_focused(c)
-
-    if focused_window is None:
-        return
-
-    workspace = focused_window.workspace()
-    # master window closed and only stack container left
-    if len(workspace.nodes) == 1:
-        # move focused window (usually last focused window of stack) back to workspace level
-        move_window(c, focused_window, workspace)
-        # now the stack if it exists is first node and gets moved to the end of workspace
-        move_window(c, workspace.nodes[0], workspace)
-
-
 def main():
     c = Connection()
     c.on(Event.WINDOW_FOCUS, on_window_focus)
     c.on(Event.WINDOW_NEW, on_window_new)
-    if options.disable_on_close is not True:
-        c.on(Event.WINDOW_CLOSE, on_window_close)
 
     try:
         c.main()
