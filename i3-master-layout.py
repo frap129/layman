@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from re import I
 from i3ipc import Event, Connection
 from optparse import OptionParser
 
