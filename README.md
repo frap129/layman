@@ -52,13 +52,17 @@ Options:
                         List of outputs that should be used instead of all.
   -n, --nested          Also move new windows which are created in nested
                         containers.
+  -l LAYOUT, --stack-layout=LAYOUT
+                        The stack layout. ("tabbed", "stacked", "splitv")
+                        default: splitv
   --disable-rearrange   Disable the rearrangement of windows when the master
                         window disappears.
 ```
 
 ## TODO
 - ~~fix stack behaviour when master window is closed~~
-- make stack layout configurable (stacked, tabbed, splith, splitv)
+- ~~make stack layout configurable (stacked, tabbed, splith, splitv)~~
+- fix stack layout "splith"
 - fix rearragement when master gets float window
 - maybe a focused based master selection (focused will get master automatically)
 ---
