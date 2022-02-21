@@ -25,9 +25,20 @@ parser.add_option("-o",
                   callback=get_comma_separated_args,
                   metavar="HDMI-0,DP-0,.. ",
                   help="List of outputs that should be used instead of all.")
-parser.add_option("-n", "--nested", dest="move_nested", action="store_true", help="Also move new windows which are created in nested containers.")
+parser.add_option("-n",
+                  "--nested",
+                  dest="move_nested",
+                  action="store_true",
+                  help="Also move new windows which are created in nested containers.")
+parser.add_option("-l",
+                  "--stack-layout",
+                  dest="stack_layout",
+                  action="store",
+                  metavar="LAYOUT",
+                  help='The stack layout. ("tabbed", "stacked", "splitv") default: splitv',
+                  choices=["tabbed", "stacked", "splitv"])  # splith not yet supported
 parser.add_option("--disable-rearrange",
-                  dest="disable_on_close",
+                  dest="disable_rearrange",
                   action="store_true",
                   help="Disable the rearrangement of windows when the master window disappears.")
 (options, args) = parser.parse_args()
@@ -100,7 +111,7 @@ def on_window_focus(c, e):
 
     workspace = focused_window.workspace()
 
-    if options.disable_on_close is not True:
+    if options.disable_rearrange is not True:
         # master window disappears and only stack container left
         if len(workspace.nodes) == 1:
             # move focused window (usually last focused window of stack) back to workspace level
@@ -111,10 +122,15 @@ def on_window_focus(c, e):
     if len(workspace.nodes) < 2:
         return
 
+    layout = options.stack_layout or "splitv"
+
     last = find_last(workspace)
+
     # last window is also 2nd window
-    if last == workspace.nodes[1] and last.layout != "splitv":
-        c.command("[con_id=%d] splitv" % last.id)
+    # splith is not supported yet. idk how to differentiate between splith and nested splith.
+    if last == workspace.nodes[1] and (last.layout != layout):
+        c.command("[con_id=%d] split vertical" % last.id)
+        c.command("[con_id=%d] layout %s" % (last.id, layout))
 
 
 def main():
