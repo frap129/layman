@@ -3,7 +3,6 @@
 from i3ipc import Event, Connection
 from optparse import OptionParser
 from setproctitle import setproctitle
-from collections import deque
 
 
 def get_comma_separated_args(option, opt, value, parser):
