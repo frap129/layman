@@ -54,7 +54,7 @@ def is_excluded(window):
     if window.workspace() is None:
         return True
 
-    if "on" in window.floating:
+    if window.floating is not None and "on" in window.floating:
         return True
 
     if options.excludes and window.workspace().name in options.excludes:
