@@ -2,11 +2,26 @@
 
 from i3ipc import Event, Connection
 from optparse import OptionParser
+from setproctitle import setproctitle
+from collections import deque
 
 
 def get_comma_separated_args(option, opt, value, parser):
     setattr(parser.values, option.dest, value.split(","))
 
+
+class WorkspaceList(dict):
+    def __missing__(self, key):
+        return None
+
+
+class WorkspaceNode:
+    def __init__(self, master_id, stack_ids):
+        self.master_id = master_id
+        self.stack_ids = stack_ids
+
+
+workspaces = WorkspaceList()
 
 parser = OptionParser()
 parser.add_option("-e",
@@ -76,17 +91,54 @@ def grab_focused(c):
     return focused_window
 
 
-def find_last(con):
-    if len(con.nodes) > 1:
-        return find_last(con.nodes[-1])
-
-    return con
-
-
 def move_window(c, subject, target):
-    c.command("[con_id=%d] mark --add move_target" % target.id)
-    c.command("[con_id=%d] move container to mark move_target" % subject.id)
-    c.command("[con_id=%d] unmark move_target" % target.id)
+    c.command("[con_id=%d] mark --add move_target" % target)
+    c.command("[con_id=%d] move container to mark move_target" % subject)
+    c.command("[con_id=%d] unmark move_target" % target)
+
+
+def push_window(c, subject, workspace):
+    # Record workspace if it's new
+    workspace_state = workspaces[workspace] 
+    if workspace_state is None:
+        workspaces[workspace] = WorkspaceNode(subject, [])
+        return
+
+    # Only record window if stack is empty
+    if workspace_state.stack_ids == []:
+        # Check if master is empty
+        if workspace_state.master_id == 0:
+            workspace_state.master_id = subject
+        else:
+            workspace_state.stack_ids.append(subject)
+        return
+        
+    # Put new window at top of stack
+    target = workspace_state.stack_ids[0]
+    move_window(c, subject, target)
+    for window in workspace_state.stack_ids:
+        c.command("move up")
+
+    # Swap with master
+    old_master = workspace_state.master_id
+    c.command("[con_id=%d] swap container with con_id %d" % (subject, old_master))  
+
+    # Update record
+    workspace_state.stack_ids.append(workspace_state.master_id)
+    workspace_state.master_id = subject
+
+
+def pop_window(c, workspace):
+    # Check if last window is being popped
+    if workspaces[workspace].stack_ids == []:
+        workspaces[workspace].master_id = 0
+        return
+
+    subject = workspaces[workspace].stack_ids.pop()
+    workspaces[workspace].master_id = subject
+
+    c.command("[con_id=%s] focus" % subject)
+    c.command("move left")
 
 
 def on_window_new(c, e):
@@ -96,11 +148,12 @@ def on_window_new(c, e):
         return
 
     # only windows created on workspace level get moved if nested option isn't enabled
-    if options.move_nested is not True and new_window.parent != new_window.workspace():
+    workspace = new_window.workspace()
+    if options.move_nested is not True and new_window.parent != workspace:
         return
 
     # new window gets moved behind last window found
-    move_window(c, new_window, find_last(new_window.workspace()))
+    push_window(c, new_window.id, workspace.id)
 
 
 def on_window_focus(c, e):
@@ -111,32 +164,38 @@ def on_window_focus(c, e):
 
     workspace = focused_window.workspace()
 
-    if options.disable_rearrange is not True:
-        # master window disappears and only stack container left
-        if len(workspace.nodes) == 1:
-            # move focused window (usually last focused window of stack) back to workspace level
-            move_window(c, focused_window, workspace)
-            # now the stack if it exists is first node and gets moved to the end of workspace
-            move_window(c, workspace.nodes[0], workspace)
-
     if len(workspace.nodes) < 2:
         return
 
-    layout = options.stack_layout or "splitv"
+    # Ignore untracked workspaces
+    # TODO Autoarrange untracked workspaces
+    if workspaces[workspace.id] is None:
+        return
 
-    last = find_last(workspace)
-
-    # last window is also 2nd window
     # splith is not supported yet. idk how to differentiate between splith and nested splith.
-    if last == workspace.nodes[1] and (last.layout != layout):
-        c.command("[con_id=%d] split vertical" % last.id)
-        c.command("[con_id=%d] layout %s" % (last.id, layout))
+    if workspaces[workspace.id].stack_ids != []:
+        layout = options.stack_layout or "splitv"
+        bottom = workspaces[workspace.id].stack_ids[0]
+
+        c.command("[con_id=%d] split vertical" % bottom)
+        c.command("[con_id=%d] layout %s" % (bottom, layout))
+
+
+def on_window_close(c, e):
+    if options.disable_rearrange is not True:
+        # check if master window was closed 
+        for workspace in workspaces:
+            # master window disappears and only stack container left
+            if workspaces[workspace].master_id == e.container.id:
+                pop_window(c, workspace)
 
 
 def main():
+    setproctitle("i3-master-layout")
     c = Connection()
     c.on(Event.WINDOW_FOCUS, on_window_focus)
     c.on(Event.WINDOW_NEW, on_window_new)
+    c.on(Event.WINDOW_CLOSE, on_window_close)
 
     try:
         c.main()
