@@ -105,13 +105,19 @@ def push_window(c, subject, workspace):
 
     # Only record window if stack is empty
     if workspace_state.stack_ids == []:
-        # Check if master is empty
+        # Check if master is empty too
         if workspace_state.master_id == 0:
             workspace_state.master_id = subject
+            return
         else:
             workspace_state.stack_ids.append(subject)
         return
-        
+
+    # Check if we're missing master but have a stack, for some reason
+    if workspace_state.master_id == 0:
+        workspace_state.master_id = subject
+        return
+
     # Put new window at top of stack
     target = workspace_state.stack_ids[0]
     move_window(c, subject, target)
@@ -133,11 +139,47 @@ def pop_window(c, workspace):
         workspaces[workspace].master_id = 0
         return
 
+    # Move top of stack to master position
     subject = workspaces[workspace].stack_ids.pop()
     workspaces[workspace].master_id = subject
-
     c.command("[con_id=%s] focus" % subject)
     c.command("move left")
+
+
+def rotate_up(c):
+    workspace_state = workspaces[workspace]
+    # Exit if less than three windows
+    if workspace_state is None or len(workspace_state.stack_ids) < 2:
+        return
+
+    new_master = workspace_state.stack_ids.pop()
+    old_master = workspace_state.master_id
+    stack_bottom = workspace_state.stack_ids[0]
+
+    # Swap top of stack with master, then move old master to bottom
+    c.command("[con_id=%d] swap container with con_id %d" % (new_master, old_master))
+    move_window(c, old_master, stack_bottom)
+
+    # Update record
+    workspace_state.master_id = new_master
+    workspace_State.stack_ids.insert(0, old_master)
+
+
+def swap_master(c):
+    workspace_state = workspaces[workspace]
+    # Exit if less than two windows
+    if workspace_state is None or workspace_state.stack_ids == []:
+        return
+
+    # Swap focused window with master
+    focused_window = grab_focused(c)
+    old_master = workspace_state.master_id
+    new_master = workspace_state.stack_ids.pop()
+    c.command("[con_id=%d] swap container with con_id %d" % (new_master, old_master))
+
+    # Update record
+    workspace_state.master_id = new_master
+    workspace_state.stack_ids.append(old_master)
 
 
 def on_window_new(c, e):
@@ -146,12 +188,13 @@ def on_window_new(c, e):
     if new_window is None:
         return
 
-    # only windows created on workspace level get moved if nested option isn't enabled
     workspace = new_window.workspace()
-    if options.move_nested is not True and new_window.parent != workspace:
-        return
+    # only windows created on workspace level get moved if nested option isn't enabled
+    #if options.move_nested is not True and new_window.parent != workspace:
+    #    return
 
     # new window gets moved behind last window found
+    print("New window id: %d" % new_window.id)
     push_window(c, new_window.id, workspace.id)
 
 
@@ -181,13 +224,22 @@ def on_window_focus(c, e):
 
 
 def on_window_close(c, e):
+    print("Closed window id: %d" % e.container.id)
     if options.disable_rearrange is not True:
         # check if master window was closed 
         for workspace in workspaces:
             # master window disappears and only stack container left
             if workspaces[workspace].master_id == e.container.id:
                 pop_window(c, workspace)
+                print("New master id after pop: %d" % workspaces[workspace].master_id)
 
+
+def on_binding(c, e):
+    command = e.ipc_data["binding"]["command"].strip()
+    if(command == "nop rotate up"):
+        rotate_up(c)
+    elif(command == "nop swap master"):
+        swap_master(c)
 
 def main():
     setproctitle("i3-master-layout")
@@ -195,6 +247,7 @@ def main():
     c.on(Event.WINDOW_FOCUS, on_window_focus)
     c.on(Event.WINDOW_NEW, on_window_new)
     c.on(Event.WINDOW_CLOSE, on_window_close)
+    c.on(Event.BINDING, on_binding)
 
     try:
         c.main()
