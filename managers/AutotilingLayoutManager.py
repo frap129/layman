@@ -16,9 +16,11 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
+from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
+import utils
 
 # AutolingLayoutManager, adapted from nwg-piotr's autiling script
-class AutotilingLayoutManager:
+class AutotilingLayoutManager(WorkspaceLayoutManager):
     def __init__(self, con, workspaceId, options):
         self.con = con
         self.workspaceId = workspaceId
@@ -26,7 +28,7 @@ class AutotilingLayoutManager:
 
 
     def switchSplit(self):
-        focusedWindow = self.con.get_tree().find_focused()
+        focusedWindow = utils.findFocused(self.con)
         if focusedWindow is not None:
             if focusedWindow.floating:
                 # We're on i3: on sway it would be None
@@ -47,13 +49,13 @@ class AutotilingLayoutManager:
 
                 if newLayout != focusedWindow.parent.layout:
                     result = self.con.command(newLayout)
-                    if result[0].success and debug:
-                        log("AutotilingLayoutManager: Switched to %s" % newLayout)
+                    if result[0].success:
+                        self.log("switchSplit: Switched to %s" % newLayout)
                     elif debug:
-                        log("AutotilingLayoutManager: Error: Switch failed with err {}".format(result[0].error))
+                        self.log("switchSplit: Error: Switch failed with err {}".format(result[0].error))
 
         else :
-            log("AutotilingLayoutManager: No focused container found or autotiling on the workspace turned off")
+            self.log("switchSplit: No focused container found or autotiling on the workspace turned off")
 
 
     def windowCreated(self, event):
