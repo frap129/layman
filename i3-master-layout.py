@@ -23,6 +23,13 @@ class WorkspaceNode:
 workspaces = WorkspaceList()
 
 parser = OptionParser()
+parser.add_option("-w",
+                  "--master-width",
+                  dest="master_width",
+                  type="int",
+                  action="store",
+                  metavar="WIDTH",
+                  help="The percent screen width the master window should fill. Default is 50")
 parser.add_option("-e",
                   "--exclude-workspaces",
                   dest="excludes",
@@ -90,6 +97,10 @@ def grab_focused(c):
     return focused_window
 
 
+def set_master_width(c, master_id):
+    c.command('[con_id=%s] resize set %s 0 ppt' % (master_id, options.master_width))
+
+
 def move_window(c, subject, target):
     c.command("[con_id=%d] mark --add move_target" % target)
     c.command("[con_id=%d] move container to mark move_target" % subject)
@@ -108,9 +119,9 @@ def push_window(c, subject, workspace):
         # Check if master is empty too
         if workspace_state.master_id == 0:
             workspace_state.master_id = subject
-            return
         else:
             workspace_state.stack_ids.append(subject)
+            set_master_width(c, workspace_state.master_id)
         return
 
     # Check if we're missing master but have a stack, for some reason
@@ -119,14 +130,15 @@ def push_window(c, subject, workspace):
         return
 
     # Put new window at top of stack
-    target = workspace_state.stack_ids[0]
+    target = workspace_state.stack_ids[-1]
     move_window(c, subject, target)
-    for window in workspace_state.stack_ids:
-        c.command("move up")
+    c.command("[con_id=%s] focus" % subject)
+    c.command("move up")
 
     # Swap with master
     old_master = workspace_state.master_id
-    c.command("[con_id=%d] swap container with con_id %d" % (subject, old_master))  
+    c.command("[con_id=%d] swap container with con_id %d" % (subject, old_master))
+    set_master_width(c, subject)
 
     # Update record
     workspace_state.stack_ids.append(workspace_state.master_id)
@@ -144,6 +156,7 @@ def pop_window(c, workspace):
     workspaces[workspace].master_id = subject
     c.command("[con_id=%s] focus" % subject)
     c.command("move left")
+    set_master_width(c, subject)
 
 
 def rotate_up(c):
@@ -189,11 +202,8 @@ def on_window_new(c, e):
         return
 
     workspace = new_window.workspace()
-    # only windows created on workspace level get moved if nested option isn't enabled
-    #if options.move_nested is not True and new_window.parent != workspace:
-    #    return
 
-    # new window gets moved behind last window found
+    # New window replcases master, master gets pushed to stack
     print("New window id: %d" % new_window.id)
     push_window(c, new_window.id, workspace.id)
 
@@ -226,20 +236,30 @@ def on_window_focus(c, e):
 def on_window_close(c, e):
     print("Closed window id: %d" % e.container.id)
     if options.disable_rearrange is not True:
-        # check if master window was closed 
+        # Check if master window was closed 
         for workspace in workspaces:
-            # master window disappears and only stack container left
             if workspaces[workspace].master_id == e.container.id:
+                # Pop off top of stack if master was closed
                 pop_window(c, workspace)
                 print("New master id after pop: %d" % workspaces[workspace].master_id)
+                return
+            else:
+                # Either a stack window was closed, or window is on a different workspace
+                # Try to remove window from stack, catch if its on a different workspace
+                try:
+                    workspaces[workspace].stack_ids.remove(e.container.id)
+                    return
+                except BaseException as e:
+                    continue
 
 
 def on_binding(c, e):
     command = e.ipc_data["binding"]["command"].strip()
-    if(command == "nop rotate up"):
+    if command == "nop rotate up":
         rotate_up(c)
-    elif(command == "nop swap master"):
+    elif command == "nop swap master":
         swap_master(c)
+
 
 def main():
     setproctitle("i3-master-layout")
