@@ -44,8 +44,8 @@ def getUserOptions():
                       type="string",
                       action="callback",
                       callback=getCommaSeparatedArgs,
-                      metavar="ws1,ws2,.. ",
-                      help="List of workspaces that should be ignored.")
+                      metavar="1,2,.. ",
+                      help="List of workspaces numbers that should be ignored.")
     parser.add_option("-o",
                       "--outputs",
                       dest="outputs",
