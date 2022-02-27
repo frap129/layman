@@ -21,15 +21,16 @@ import utils
 
 # AutolingLayoutManager, adapted from nwg-piotr's autiling script
 class AutotilingLayoutManager(WorkspaceLayoutManager):
-    def __init__(self, con, workspaceId, options):
+    def __init__(self, con, workspace, options):
         self.con = con
-        self.workspaceId = workspaceId
+        self.workspaceId = workspace.ipc_data["id"]
+        self.workspaceNum = workspace.num
         self.debug = options.debug
 
 
     def switchSplit(self):
         focusedWindow = utils.findFocused(self.con)
-        if focusedWindow is not None:
+        if focusedWindow is not None and focusedWindow.workspace().id == self.workspaceId:
             if focusedWindow.floating:
                 # We're on i3: on sway it would be None
                 # May be 'auto_on' or 'user_on'

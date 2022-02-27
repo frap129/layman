@@ -19,9 +19,10 @@ from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 import utils
 
 class MasterStackLayoutManager(WorkspaceLayoutManager):
-    def __init__(self, con, workspaceId, options):
+    def __init__(self, con, workspace, options):
         self.con = con
-        self.workspaceId = workspaceId
+        self.workspaceId = workspace.ipc_data["id"]
+        self.workspaceNum = workspace.num
         self.masterId = 0
         self.stackIds = []
         self.debug = options.debug
@@ -30,15 +31,16 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def setMasterWidth(self):
-        self.con.command('[con_id=%s] resize set %s 0 ppt' % (self.masterId, self.masterWidth))
-        self.log("Set window %d width to %d" % (self.masterId, self.masterWidth))
+        if self.masterWidth is not None:
+            self.con.command('[con_id=%s] resize set %s 0 ppt' % (self.masterId, self.masterWidth))
+            self.log("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
     def moveWindow(self, subject, target):
         self.con.command("[con_id=%d] mark --add move_target" % target)
         self.con.command("[con_id=%d] move container to mark move_target" % subject)
         self.con.command("[con_id=%d] unmark move_target" % target)
-        self.log("Moved window %d to mark on window %d" % (self.masterId, self.masterWidth))
+        self.log("Moved window %s to mark on window %s" % (subject, target))
 
 
     def pushWindow(self, subject):
@@ -46,18 +48,18 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.stackIds == []:
             # Check if master is empty too
             if self.masterId == 0:
-                self.log("pushWindow: Made window %d master" % subject.id)
+                self.log("pushWindow: Made window %d master" % subject)
                 self.masterId = subject
             else:
                 self.stackIds.append(subject)
-                self.log("pushWindow: Initialized stack with window %d" % subject.id)
+                self.log("pushWindow: Initialized stack with window %d" % subject)
                 self.setMasterWidth()
             return
 
         # Check if we're missing master but have a stack, for some reason
         if self.masterId == 0:
             self.masterId = subject
-            self.log("pushWindow: WTF: stack has windows, but no master. Made window %d master" % subject.id)
+            self.log("pushWindow: WTF: stack has windows, but no master. Made window %d master" % subject)
             self.con.command("move left")
             self.setMasterWidth()
             return
@@ -70,7 +72,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         # Swap with master
         oldMaster = self.masterId
-        self.con.command("[con_id=%d] swap container with con_id %d" % (subject, oldMaster))
+        self.con.command("[con_id=%s] swap container with con_id %s" % (subject, oldMaster))
         self.setMasterWidth()
 
         # Update record
@@ -159,7 +161,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("Closed window id: %d" % event.container.id)
         # Try to remove window from stack, catch if its on a different workspace
         try:
-            self.stackIds.remove(e.container.id)
+            self.stackIds.remove(event.container.id)
             return
         except BaseException as e:
             return

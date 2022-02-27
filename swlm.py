@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Copyright 2022 Joe Maples <joe@maples.dev>
 
@@ -17,7 +16,6 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
-
 from i3ipc import Event, Connection
 from setproctitle import setproctitle
 
@@ -40,163 +38,122 @@ def log(msg):
         print(msg)
 
 
-def isExcluded(window):
-    if window is None:
+def isExcluded(workspace):
+    if workspace is None:
         return True
 
-    if window.type != "con":
+    if options.excludes and workspace.num in options.excludes:
         return True
 
-    if window.workspace() is None:
-        return True
-
-    if window.floating is not None and "on" in window.floating:
-        return True
-
-    if options.excludes and window.workspace().num in options.excludes:
-        return True
-
-    if options.outputs and window.ipc_data["output"] not in options.outputs:
+    if options.outputs and workspace.ipc_data["output"] not in options.outputs:
         return True
 
     return False
 
-# This doesn't work for some reason, guess a window needs top be action
+
 def findFocusedWorkspace(con):
-    # Get id of focused workspace
-    workspaceId = None
-    for workspace in con.get_tree().workspaces():
-        log(workspace.focused)
+    workspace = None
+    for workspace in con.get_workspaces():
         if workspace.focused:
-            workspaceId = workspace.id
+            workspace = workspace
             break
 
-    return workspaceId
+    return workspace
+
 
 def windowCreated(con, event):
-    # Check if we should ignore this call
-    focusedWindow = utils.findFocused(con)
-    if isExcluded(focusedWindow):
-        log("windowCreated: Window, workspace, or output excluded")
-        return
-
-    # Get focused workspace
-    workspaceId = focusedWindow.workspace().id
-    if workspaceId is None:
-        log("windowCreated: No workspace given")
+    # Check if we should pass this call to a manager
+    workspace = findFocusedWorkspace(con)
+    if isExcluded(workspace):
+        log("windowCreated: workspace or output excluded")
         return
 
     # Pass command to the appropriate manager
-    if workspaceId not in managers:
-        log("windowCreated: No manager for workpsace %d, ignoring" % workspaceId)
+    if workspace.num not in managers:
+        log("windowCreated: No manager for workpsace %d, ignoring" % workspace.num)
         return
 
-    log("windowCreated: calling manager for workspace %d" % workspaceId)
-    managers[workspaceId].windowCreated(event)
+    log("windowCreated: calling manager for workspace %d" % workspace.num)
+    managers[workspace.num].windowCreated(event)
 
 
 def windowFocused(con, event):
-    # Check if we should ignore this call
-    focusedWindow = utils.findFocused(con)
-    if isExcluded(focusedWindow):
-        log("windowFocused: Window, workspace, or output excluded")
+    # Check if we should pass this call to a manager
+    workspace = findFocusedWorkspace(con)
+    if isExcluded(workspace):
+        log("windowFocused: workspace or output excluded")
         return
 
-    # Get focused workspace
-    workspaceId = focusedWindow.workspace().id
-    if workspaceId is None:
-        log("windowFocused: No workspace given")
-        return
-    
     # Pass command to the appropriate manager
-    if workspaceId not in managers:
-        log("windowFocused: No manager for workpsace %d, ignoring" % workspaceId)
+    if workspace.num not in managers:
+        log("windowFocused: No manager for workpsace %d, ignoring" % workspace.num)
         return
 
-    log("windowFocused: Calling manager for workspace %d" % workspaceId)
-    managers[workspaceId].windowFocused(event)
+    log("windowFocused: Calling manager for workspace %d" % workspace.num)
+    managers[workspace.num].windowFocused(event)
 
 
 def windowClosed(con, event):
-    # Check if we should ignore this call
-    focusedWindow = utils.findFocused(con)
-    if isExcluded(focusedWindow):
-        log("windowClosed: Window, workspace, or output excluded")
+    # Check if we should pass this call to a manager
+    workspace = findFocusedWorkspace(con)
+    if isExcluded(workspace):
+        log("windowClosed: workspace or output excluded")
         return
-
-    # Get focused workspace
-    workspaceId = focusedWindow.workspace().id
-    if workspaceId is None:
-        log("windowClosed: No workspace given")
-        return None
 
     # Pass command to the appropriate manager
-    if workspaceId not in managers:
-        log("windowClosed: No manager for workpsace %d, ignoring" % workspaceId)
+    if workspace.num not in managers:
+        log("windowClosed: No manager for workpsace %d, ignoring" % workspace.num)
         return
 
-    log("windowClosed: calling manager for workspace %d" % workspaceId)
-    managers[workspaceId].windowClosed(event)
+    log("windowClosed: calling manager for workspace %d" % workspace.num)
+    managers[workspace.num].windowClosed(event)
 
 
 def windowMoved(con, event):
-    # Check if we should ignore this call
-    focusedWindow = utils.findFocused(con)
-    if isExcluded(focusedWindow):
-        log("windowMoved: Window, workspace, or output excluded")
+    # Check if we should pass this call to a manager
+    workspace = findFocusedWorkspace(con)
+    if isExcluded(workspace):
+        log("windowMoved: workspace or output excluded")
         return
-
-    # Get focused workspace
-    workspaceId = focusedWindow.workspace().id
-    if workspaceId is None:
-        log("windowMoved: No workspace given")
-        return None
 
     # Pass command to the appropriate manager
-    if workspaceId not in managers:
-        log("windowMoved: No manager for workpsace %d, ignoring" % workspaceId)
+    if workspace.num not in managers:
+        log("windowMoved: No manager for workpsace %d, ignoring" % workspace.num)
         return
 
-    log("windowMoved: calling manager for workspace %d" % workspaceId)
-    managers[workspaceId].windowMoved(event)
+    log("windowMoved: calling manager for workspace %d" % workspace.num)
+    managers[workspace.num].windowMoved(event)
 
 
 def recvBinding(con, event):
-    # Check if we should ignore this call
-    focusedWindow = utils.findFocused(con)
-    if isExcluded(focusedWindow):
-        log("windowFocused: Window, workspace, or output excluded")
+    # Check if we should pass this call to a manager
+    workspace = findFocusedWorkspace(con)
+    if isExcluded(workspace):
+        log("recvBinding: workspace or output excluded")
         return
-
-    # Get focused workspace
-    # TODO: Get focused workspace without having to create a window
-    workspaceId = focusedWindow.workspace().id
-    if workspaceId is None:
-        log("recvBinding: No workspace given")
-        return None
 
     # Check if command is to create a layout manager
     command = event.ipc_data["binding"]["command"].strip()
     if command == "nop layout none":
-        managers[workspaceId] = None
-        log("recvBinding: Destroyed manager on workspace %d" % workspaceId)
+        managers[workspace.num] = None
+        log("recvBinding: Destroyed manager on workspace %d" % workspace.num)
         return
     elif command == "nop layout MasterStack":
-        managers[workspaceId] = MasterStackLayoutManager(con, workspaceId, options)
-        log("recvBinding: Created MasterStackLayoutManager on workspace %d" % workspaceId)
+        managers[workspace.num] = MasterStackLayoutManager(con, workspace, options)
+        log("recvBinding: Created MasterStackLayoutManager on workspace %d" % workspace.num)
         return
     elif command == "nop layout Autotiling":
-        managers[workspaceId] = AutotilingLayoutManager(con, workspaceId, options)
-        log("recvBinding: Created AutotlingLayoutManager on workspace %d" % workspaceId)
+        managers[workspace.num] = AutotilingLayoutManager(con, workspace, options)
+        log("recvBinding: Created AutotlingLayoutManager on workspace %d" % workspace.num)
         return
 
     # Pass command to the appropriate manager
-    if workspaceId not in managers:
-        log("windowClosed: No manager for workpsace %d, ignoring" % workspaceId)
+    if workspace.num not in managers:
+        log("recvBinding: No manager for workpsace %d, ignoring" % workspace.num)
         return
         
-    log("recvCommand: calling manager for workspace %d" % workspaceId)    
-    managers[workspaceId].binding(event)
+    log("recvCommand: calling manager for workspace %d" % workspace.num)
+    managers[workspace.num].binding(event)
 
 
 def main():
