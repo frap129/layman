@@ -119,6 +119,27 @@ def windowClosed(con, event):
     log("windowClosed: calling manager for workspace %d" % workspaceId)
     managers[workspaceId].windowClosed(event)
 
+def windowMoved(con, event):
+    # Check if we should ignore this call
+    focusedWindow = utils.findFocused(con)
+    if isExcluded(focusedWindow):
+        log("windowMoved: Window, workspace, or output excluded")
+        return
+
+    # Get focused workspace
+    workspaceId = focusedWindow.workspace().id
+    if workspaceId is None:
+        log("windowMoved: No workspace given")
+        return None
+
+    # Pass command to the appropriate manager
+    if workspaceId not in managers:
+        log("windowMoved: No manager for workpsace %d, ignoring" % workspaceId)
+        return
+
+    log("windowMoved: calling manager for workspace %d" % workspaceId)
+    managers[workspaceId].windowMoved(event)
+
 
 def recvBinding(con, event):
     # Check if we should ignore this call
@@ -158,6 +179,7 @@ def main():
     con.on(Event.WINDOW_FOCUS, windowFocused)
     con.on(Event.WINDOW_NEW, windowCreated)
     con.on(Event.WINDOW_CLOSE, windowClosed)
+    con.on(Event.WINDOW_MOVE, windowClosed)
     con.on(Event.BINDING, recvBinding)
     
     try:

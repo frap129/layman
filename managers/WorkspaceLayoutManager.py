@@ -20,5 +20,10 @@ class WorkspaceLayoutManager:
     def windowClosed(self, event):
         pass
 
+
+    def windowMoved(self, event):
+        pass
+
+
     def binding(self, command):
         pass
