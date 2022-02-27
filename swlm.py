@@ -23,6 +23,7 @@ from setproctitle import setproctitle
 
 import utils
 from managers.MasterStackLayoutManager import MasterStackLayoutManager
+from managers.AutotilingLayoutManager import AutotilingLayoutManager
 
 
 class WorkspaceLayoutManagerDict(dict):
@@ -137,6 +138,7 @@ def windowClosed(con, event):
     log("windowClosed: calling manager for workspace %d" % workspaceId)
     managers[workspaceId].windowClosed(event)
 
+
 def windowMoved(con, event):
     # Check if we should ignore this call
     focusedWindow = utils.findFocused(con)
@@ -179,7 +181,10 @@ def recvBinding(con, event):
         managers[workspaceId] = MasterStackLayoutManager(con, workspaceId, options)
         log("recvBinding: Created MasterStackLayoutManager on workspace %d" % workspaceId)
         return
-
+    elif command == "nop layout Autotiling":
+        managers[workspaceId] = AutotilingLayoutManager(con, workspaceId, options)
+        log("recvBinding: Created AutotlingLayoutManager on workspace %d" % workspaceId)
+        return
     # Pass command to the appropriate manager
     if workspaceId not in managers:
         log("windowClosed: No manager for workpsace %d, ignoring" % workspaceId)
