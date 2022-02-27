@@ -160,7 +160,12 @@ def pop_window(c, workspace):
 
 
 def rotate_up(c):
-    workspace_state = workspaces[workspace]
+    focused_window = grab_focused(c)
+
+    if focused_window is None:
+        return
+    
+    workspace_state = workspaces[focused_window.workspace().id]
     # Exit if less than three windows
     if workspace_state is None or len(workspace_state.stack_ids) < 2:
         return
@@ -179,7 +184,12 @@ def rotate_up(c):
 
 
 def swap_master(c):
-    workspace_state = workspaces[workspace]
+    focused_window = grab_focused(c)
+
+    if focused_window is None:
+        return
+    
+    workspace_state = workspaces[focused_window.workspace().id]
     # Exit if less than two windows
     if workspace_state is None or workspace_state.stack_ids == []:
         return
