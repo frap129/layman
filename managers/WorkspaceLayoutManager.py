@@ -1,5 +1,5 @@
 class WorkspaceLayoutManager:
-    def __init__(self, con, workspaceId):
+    def __init__(self, con, workspaceId, options):
         self.con = con
         self.workspaceId = workspaceId
         self.debug = options.debug
