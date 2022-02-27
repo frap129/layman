@@ -11,7 +11,7 @@ def get_comma_separated_args(option, opt, value, parser):
 parser = OptionParser()
 parser.add_option("-w",
                   "--master-width",
-                  dest="master_width",
+                  dest="masterWidth",
                   type="int",
                   action="store",
                   metavar="WIDTH",
@@ -39,7 +39,7 @@ parser.add_option("-n",
                   help="Also move new windows which are created in nested containers.")
 parser.add_option("-l",
                   "--stack-layout",
-                  dest="stack_layout",
+                  dest="stackLayout",
                   action="store",
                   metavar="LAYOUT",
                   help='The stack layout. ("tabbed", "stacked", "splitv") default: splitv',
@@ -51,17 +51,20 @@ parser.add_option("--disable-rearrange",
 parser.add_option("-d",
                   "--debug",
                   dest="debug",
-                  action="store_false",
-                  help="Enable logging")
+                  action="store_true",
+                  help="Enable debug messages")
 (options, args) = parser.parse_args()
 
 
-def log(msg):
-    if options.debug is True:
-        print(msg)
+def log(msg, workspace):
+    if True: # TODO: Disable logging by default
+        if workspace is None:
+            print(msg)
+        else:
+            print(("workspace %d: " % workspace) + msg)
 
 
-def is_excluded(window):
+def isExcluded(window):
     if window is None:
         return True
 
@@ -83,153 +86,150 @@ def is_excluded(window):
     return False
 
         
-def grab_focused(c):
+def findFocused(c):
     tree = c.get_tree()
-    focused_window = tree.find_focused()
+    focusedWindow = tree.find_focused()
 
-    if is_excluded(focused_window):
+    if isExcluded(focusedWindow):
         return None
 
-    return focused_window
+    return focusedWindow
 
 
 class WorkspaceLayoutManager:
-    def __init__(self, con, workspace, master_id, master_width, stack_layout):
+    def __init__(self, con, workspaceId, masterWidth, stackLayout):
         self.con = con
-        self.workspace = workspace
-        self.master_id = master_id
-        self.stack_ids = []
-        self.master_width = master_width
-        self.stack_layout = stack_layout
+        self.workspaceId = workspaceId
+        self.masterId = 0
+        self.stackIds = []
+        self.masterWidth = masterWidth
+        self.stackLayout = stackLayout
 
 
-    def set_master_width():
-        con.command('[con_id=%s] resize set %s 0 ppt' % (master_id, master_width))
+    def setMasterWidth(self):
+        self.con.command('[con_id=%s] resize set %s 0 ppt' % (self.masterId, self.masterWidth))
 
 
-    def move_window(subject, target):
-        con.command("[con_id=%d] mark --add move_target" % target)
-        con.command("[con_id=%d] move container to mark move_target" % subject)
-        con.command("[con_id=%d] unmark move_target" % target)
+    def moveWindow(self, subject, target):
+        self.con.command("[con_id=%d] mark --add move_target" % target)
+        self.con.command("[con_id=%d] move container to mark move_target" % subject)
+        self.con.command("[con_id=%d] unmark move_target" % target)
 
 
-    def push_window(subject):
+    def pushWindow(self, subject):
         # Only record window if stack is empty
-        if stack_ids == []:
+        if self.stackIds == []:
             # Check if master is empty too
-            if master_id == 0:
-                master_id = subject
+            if self.masterId == 0:
+                self.masterId = subject
             else:
-                stack_ids.append(subject)
-                set_master_width()
+                self.stackIds.append(subject)
+                self.setMasterWidth()
             return
 
         # Check if we're missing master but have a stack, for some reason
-        if master_id == 0:
-            master_id = subject
+        if self.masterId == 0:
+            self.masterId = subject
             return
 
         # Put new window at top of stack
-        target = stack_ids[-1]
-        move_window(subject, target)
-        con.command("[con_id=%s] focus" % subject)
-        con.command("move up")
+        target = self.stackIds[-1]
+        self.moveWindow(subject, target)
+        self.con.command("[con_id=%s] focus" % subject)
+        self.con.command("move up")
 
         # Swap with master
-        old_master = master_id
-        con.command("[con_id=%d] swap container with con_id %d" % (subject, old_master))
-        set_master_width()
+        oldMaster = self.masterId
+        self.con.command("[con_id=%d] swap container with con_id %d" % (subject, oldMaster))
+        self.setMasterWidth()
 
         # Update record
-        workspace_state.stack_ids.append(master_id)
-        workspace_state.master_id = subject
+        self.stackIds.append(self.masterId)
+        self.masterId = subject
 
 
-    def pop_window():
+    def popWindow():
         # Check if last window is being popped
-        if stack_ids == []:
-            master_id = 0
+        if self.stackIds == []:
+            self.masterId = 0
             return
 
         # Move top of stack to master position
-        master_id = stack_ids.pop()
-        con.command("[con_id=%s] focus" % master_id)
-        con.command("move left")
-        set_master_width()
+        self.masterId = self.stackIds.pop()
+        self.con.command("[con_id=%s] focus" % self.masterId)
+        self.con.command("move left")
+        self.setMasterWidth()
 
 
-    def rotate_up():
+    def rotateUp():
         # Exit if less than three windows
-        if len(stack_ids) < 2:
+        if len(self.stackIds) < 2:
             return
 
-        new_master = stack_ids.pop()
-        old_master = master_id
-        stack_bottom = stack_ids[0]
+        newMaster = self.stackIds.pop()
+        oldMaster = self.masterId
+        bottom = self.stackIds[0]
 
         # Swap top of stack with master, then move old master to bottom
-        con.command("[con_id=%d] swap container with con_id %d" % (new_master, old_master))
-        move_window(old_master, stack_bottom)
+        log("New window id: %d" % newWindow.id, self.workspaceId)
+        self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
+        self.moveWindow(oldMaster, bottom)
 
         # Update record
-        master_id = new_master
-        stack_ids.insert(0, old_master)
+        self.masterId = newMaster
+        self.stackIds.insert(0, oldMaster)
 
 
-    def swap_master():
+    def swapMaster():
         # Exit if less than two windows
-        if stack_ids == []:
+        if self.stackIds == []:
             return
 
         # Swap focused window with master
-        old_master = master_id
-        new_master = stack_ids.pop()
-        c.command("[con_id=%d] swap container with con_id %d" % (new_master, old_master))
+        oldMaster = self.masterId
+        newMaster = self.stackIds.pop()
+        self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
 
         # Update record
-        workspace_state.master_id = new_master
-        workspace_state.stack_ids.append(old_master)
+        self.masterId = newMaster
+        self.stackIds.append(oldMaster)
 
 
-    def new_window(con, event):
-        new_window = grab_focused(con)
+    def windowCreated(self, event):
+        newWindow = findFocused(self.con)
         
         # New window replcases master, master gets pushed to stack
-        print("New window id: %d" % new_window.id)
-        push_window(new_window.id, workspace)
+        log("New window id: %d" % newWindow.id, self.workspaceId)
+        self.pushWindow(newWindow.id)
 
 
-    def window_focused(event):
-        focused_window = grab_focused(con)
-
-        if focused_window is None:
-            return
-
+    def windowFocused(self, event):
         # splith is not supported yet. idk how to differentiate between splith and nested splith.
-        if stack_ids != []:
-            layout = stack_layout or "splitv"
-            bottom = stack_ids[0]
+        if self.stackIds != []:
+            layout = self.stackLayout or "splitv"
+            bottom = self.stackIds[0]
+            self.con.command("[con_id=%d] split vertical" % bottom)
+            self.con.command("[con_id=%d] layout %s" % (bottom, layout))
+        else:
+            self.con.command("[con_id=%d] split horizontal" % self.masterId)
 
-            con.command("[con_id=%d] split vertical" % bottom)
-            c.command("[con_id=%d] layout %s" % (bottom, layout))
 
-
-    def window_closed(event):
-        print("Closed window id: %d" % event.container.id)
+    def windowClosed(self, event):
+        log("Closed window id: %d" % event.container.id, self.workspaceId)
         # Try to remove window from stack, catch if its on a different workspace
         try:
-            workspaces[workspace].stack_ids.remove(e.container.id)
+            self.stackIds.remove(e.container.id)
             return
         except BaseException as e:
             return
 
 
-    def binding(event):
+    def binding(self, event):
         command = event.ipc_data["binding"]["command"].strip()
         if command == "nop rotate up":
-            rotate_up()
+            self.rotateUp()
         elif command == "nop swap master":
-            swap_master()
+            self.swapMaster()
 
 class WorkspaceLayoutManagerDict(dict):
     def __missing__(self, key):
@@ -240,49 +240,76 @@ managers = WorkspaceLayoutManagerDict()
 
 
 def on_window_new(con, event):
-    workspace = event.container.workspace()
-    if workspace is None:
+    focusedWindow = findFocused(con)
+    if focusedWindow == None:
+        log("on_window_new: No window focused", None)
         return
 
-    if managers[workspace.id] is None:
-        managers[workspace.id] = WorkspaceLayoutManager(con, workspace.id, event.container.id, options.master_width, options.stack_layout)
-    
-    managers[workspace.id].new_window(event)
+    workspace = focusedWindow.workspace()
+    if workspace is None:
+        log("on_window_new: No workspace given", None)
+        return
+
+
+    if workspace.id not in managers:
+        managers[workspace.id] = WorkspaceLayoutManager(con, workspace.id, options.masterWidth, options.stackLayout)
+        log("on_window_new: Creating new manager for workpsace %d" % workspace.id, None)
+
+    log("on_window_new: calling manager for workspace %d" % workspace.id, None)
+    managers[workspace.id].windowCreated(event)
     
 def on_window_focus(con, event):
-    workspace = event.container.workspace()
-    if workspace is None:
+    focusedWindow = findFocused(con)
+    if focusedWindow == None:
+        log("on_window_focus: No window focused", None)
         return
 
-    if managers[workspace.id] is None:
-        managers[workspace.id] = WorkspaceLayoutManager(con, workspace.id, event.container.id, options.master_width, options.stack_layout)
-    
-    managers[workspace.id].window_focused(event)
+    workspace = focusedWindow.workspace()
+    if workspace is None:
+        log("on_window_focus: No workspace given", None)
+        return
+
+    if workspace.id not in managers:
+        managers[workspace.id] = WorkspaceLayoutManager(con, workspace.id, options.masterWidth, options.stackLayout)
+        log("on_window_focus: Creating new manager for workpsace %d" % workspace.id, None)
+
+
+    log("on_window_focus: Calling manager for workspace %d" % workspace.id, None)
+    managers[workspace.id].windowFocused(event)
 
 
 def on_window_close(con, event):
-    workspace = None
-    for wlm in managers:
-        if event.container.id in managers[wlm].stack_ids:
-            workspace = wlm.workspace
-
-    if workspace is None:
+    focusedWindow = findFocused(con)
+    if focusedWindow == None:
+        log("on_window_focus: No window focused", None)
         return
 
-    managers[workspace].window_closed(event)
+    workspace = focusedWindow.workspace()
+    if workspace is None:
+        log("on_window_focus: No workspace given", None)
+        return
+
+    log("on_window_close: calling manager for workspace %d" % workspace.id, None)
+    managers[workspace.id].windowClosed(event)
+
 
 def on_binding(con, event):
-    window = grab_focused(con)
-    if window is None:
+    focusedWindow = findFocused(con)
+    if focusedWindow == None:
+        log("on_window_focus: No window focused", None)
         return
 
-    workspace = window.workspace()
+    workspace = focusedWindow.workspace()
+    if workspace is None:
+        log("on_window_focus: No workspace given", None)
+        return
 
-    if managers[workspace.id] is None:
-        managers[workspace.id] = WorkspaceLayoutManager(con, workspace.id, window.id, options.master_width, options.stack_layout)
+    if workspace.id not in managers:
+        managers[workspace.id] = WorkspaceLayoutManager(con, workspace.id, options.masterWidth, options.stackLayout)
 
-    
+    log("on_binding: calling manager for workspace %d" % workspace.id, None)    
     managers[workspace.id].binding(event)
+
 
 def main():
     setproctitle("i3-master-layout")
@@ -290,7 +317,7 @@ def main():
     con.on(Event.WINDOW_FOCUS, on_window_focus)
     con.on(Event.WINDOW_NEW, on_window_new)
     con.on(Event.WINDOW_CLOSE, on_window_close)
-    #con.on(Event.BINDING, on_binding)
+    con.on(Event.BINDING, on_binding)
 
     try:
         con.main()
