@@ -17,15 +17,16 @@ swlm. If not, see <https://www.gnu.org/licenses/>.
 """
 
 class WorkspaceLayoutManager:
-    def __init__(self, con, workspaceId, options):
+    def __init__(self, con, workspace, options):
         self.con = con
-        self.workspaceId = workspaceId
+        self.workspaceId = workspace.ipc_data["id"]
+        self.workspaceNum = workspace.num
         self.debug = options.debug
 
 
     def log(self, msg):
         if self.debug:
-            print(("workspace %d: %s: " % (self.workspaceId, self.__class__.__name__)) + msg)
+            print(("workspace %d: %s: " % (self.workspaceNum, self.__class__.__name__)) + msg)
 
     def windowCreated(self, event):
         pass
