@@ -87,19 +87,27 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackIds.insert(0, oldMaster)
 
 
-    def swapMaster(self):
+    def swap_master(self):
         # Exit if less than two windows
-        if self.stackIds == []:
+        if self.stack_ids == []:
+            return
+            
+        focused_window = utils.findFocused(self.con)
+
+        if focused_window is None:
+            return
+        
+        if focused_window.id == self.master_id:
             return
 
-        # Swap focused window with master
-        oldMaster = self.masterId
-        newMaster = self.stackIds.pop()
-        self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
-
-        # Update record
-        self.masterId = newMaster
-        self.stackIds.append(oldMaster)
+        # Find focused window in record
+        for i in range(len(self.stack_ids)):
+            if self.stack_ids[i] == focused_window.id:
+                # Swap window with master
+                self.con.command("[con_id=%d] swap container with con_id %d" % (focused_window.id, self.master_id))
+                self.stack_ids[i] = self.master_id
+                self.master_id = focused_window.id
+                return
 
 
     def windowCreated(self, event):
