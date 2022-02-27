@@ -126,6 +126,11 @@ def windowMoved(con, event):
 
 
 def recvBinding(con, event):
+    # Exit early if binding isnt for slwm
+    command = event.ipc_data["binding"]["command"].strip()
+    if "nop" not in command:
+        return
+        
     # Check if we should pass this call to a manager
     workspace = findFocusedWorkspace(con)
     if isExcluded(workspace):
@@ -133,7 +138,6 @@ def recvBinding(con, event):
         return
 
     # Check if command is to create a layout manager
-    command = event.ipc_data["binding"]["command"].strip()
     if command == "nop layout none":
         # Create no-op WLM to prevent onWorkspace from overwriting
         managers[workspace.num] = WorkspaceLayoutManager(con, workspace, options)
