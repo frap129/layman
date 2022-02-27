@@ -53,7 +53,7 @@ def isExcluded(window):
     if window.floating is not None and "on" in window.floating:
         return True
 
-    if options.excludes and window.workspace().name in options.excludes:
+    if options.excludes and window.workspace().num in options.excludes:
         return True
 
     if options.outputs and window.ipc_data["output"] not in options.outputs:
