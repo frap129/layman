@@ -135,7 +135,8 @@ def recvBinding(con, event):
     # Check if command is to create a layout manager
     command = event.ipc_data["binding"]["command"].strip()
     if command == "nop layout none":
-        managers[workspace.num] = None
+        # Create no-op WLM to prevent onWorkspace from overwriting
+        managers[workspace.num] = WorkspaceLayoutManager(con, workspace, options)
         log("recvBinding: Destroyed manager on workspace %d" % workspace.num)
         return
     elif command == "nop layout MasterStack":
@@ -155,6 +156,15 @@ def recvBinding(con, event):
     log("recvCommand: calling manager for workspace %d" % workspace.num)
     managers[workspace.num].binding(event)
 
+def onWorkspace(con, event):
+    workspace = findFocusedWorkspace(con)
+    if workspace.num not in managers:
+        if options.default == "Autotiling":
+            managers[workspace.num] = AutotilingLayoutManager(con, workspace, options)
+            log("Initialized workspace %d with AutotilingLayoutManager" % workspace.num)
+        elif options.default == "MasterStack":
+            managers[workspace.num] = MasterStackLayoutManager(con, workspace, options)
+            log("Initialized workspace %d with MasterStackLayoutManager" % workspace.num)
 
 def main():
     setproctitle("swlm")
@@ -166,9 +176,20 @@ def main():
     con.on(Event.WINDOW_CLOSE, windowClosed)
     con.on(Event.WINDOW_MOVE, windowClosed)
     con.on(Event.BINDING, recvBinding)
-    
+    log("swlm started")
+
+    # Set default layout maangers
+    if options.default and options.default != "none":
+        con.on(Event.WORKSPACE, onWorkspace)
+        for workspace in con.get_workspaces():
+            if options.default == "Autotiling":
+                managers[workspace.num] = AutotilingLayoutManager(con, workspace, options)
+                log("Initialized workspace %d with AutotilingLayoutManager" % workspace.num)
+            elif options.default == "MasterStack":
+                managers[workspace.num] = MasterStackLayoutManager(con, workspace, options)
+                log("Initialized workspace %d with MasterStackLayoutManager" % workspace.num)
+
     try:
-        log("swlm started")
         con.main()
     except BaseException as e:
         print("restarting after exception:")
