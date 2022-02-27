@@ -177,7 +177,11 @@ def recvBinding(con, event):
 
     # Check if command is to create a layout manager
     command = event.ipc_data["binding"]["command"].strip()
-    if command == "nop layout MasterStack":
+    if command == "nop layout none":
+        managers[workspaceId] = None
+        log("recvBinding: Destroyed manager on workspace %d" % workspaceId)
+        return
+    elif command == "nop layout MasterStack":
         managers[workspaceId] = MasterStackLayoutManager(con, workspaceId, options)
         log("recvBinding: Created MasterStackLayoutManager on workspace %d" % workspaceId)
         return
@@ -185,6 +189,7 @@ def recvBinding(con, event):
         managers[workspaceId] = AutotilingLayoutManager(con, workspaceId, options)
         log("recvBinding: Created AutotlingLayoutManager on workspace %d" % workspaceId)
         return
+
     # Pass command to the appropriate manager
     if workspaceId not in managers:
         log("windowClosed: No manager for workpsace %d, ignoring" % workspaceId)
