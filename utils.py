@@ -31,13 +31,13 @@ def findFocused(con):
 
 def getUserOptions():
     parser = OptionParser()
-    parser.add_option("-w",
-                      "--master-width",
-                      dest="masterWidth",
-                      type="int",
+    parser.add_option("--default",
+                      dest="default",
                       action="store",
-                      metavar="WIDTH",
-                      help="The percent screen width the master window should fill. Default is 50")
+                      metavar="LAYOUT_MANAGER",
+                      default="Autotiling",
+                      help="The LayoutManager to apply to all workspaces at startup. default: Autotiling",
+                      choices=["none", "Autotiling", "MasterStack"])
     parser.add_option("-e",
                       "--exclude-workspaces",
                       dest="excludes",
@@ -54,11 +54,18 @@ def getUserOptions():
                       callback=getCommaSeparatedArgs,
                       metavar="HDMI-0,DP-0,.. ",
                       help="List of outputs that should be used instead of all.")
-    parser.add_option("-n",
-                      "--nested",
-                      dest="move_nested",
+    parser.add_option("-d",
+                      "--debug",
+                      dest="debug",
                       action="store_true",
-                      help="Also move new windows which are created in nested containers.")
+                      help="Enable debug messages")
+    parser.add_option("-w",
+                      "--master-width",
+                      dest="masterWidth",
+                      type="int",
+                      action="store",
+                      metavar="WIDTH",
+                      help="The percent screen width the master window should fill.")
     parser.add_option("-l",
                       "--stack-layout",
                       dest="stackLayout",
@@ -66,14 +73,5 @@ def getUserOptions():
                       metavar="LAYOUT",
                       help='The stack layout. ("tabbed", "stacked", "splitv") default: splitv',
                       choices=["tabbed", "stacked", "splitv"])  # splith not yet supported
-    parser.add_option("--disable-rearrange",
-                      dest="disable_rearrange",
-                      action="store_true",
-                      help="Disable the rearrangement of windows when the master window disappears.")
-    parser.add_option("-d",
-                      "--debug",
-                      dest="debug",
-                      action="store_true",
-                      help="Enable debug messages")
     
     return parser.parse_args()[0]
