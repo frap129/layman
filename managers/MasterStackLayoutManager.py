@@ -15,12 +15,10 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
-
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 import utils
 
 class MasterStackLayoutManager(WorkspaceLayoutManager):
-
     def __init__(self, con, workspaceId, options):
         self.con = con
         self.workspaceId = workspaceId
@@ -33,12 +31,14 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def setMasterWidth(self):
         self.con.command('[con_id=%s] resize set %s 0 ppt' % (self.masterId, self.masterWidth))
+        self.log("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
     def moveWindow(self, subject, target):
         self.con.command("[con_id=%d] mark --add move_target" % target)
         self.con.command("[con_id=%d] move container to mark move_target" % subject)
         self.con.command("[con_id=%d] unmark move_target" % target)
+        self.log("Moved window %d to mark on window %d" % (self.masterId, self.masterWidth))
 
 
     def pushWindow(self, subject):
@@ -46,15 +46,20 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.stackIds == []:
             # Check if master is empty too
             if self.masterId == 0:
+                self.log("pushWindow: Made window %d master" % subject.id)
                 self.masterId = subject
             else:
                 self.stackIds.append(subject)
+                self.log("pushWindow: Initialized stack with window %d" % subject.id)
                 self.setMasterWidth()
             return
 
         # Check if we're missing master but have a stack, for some reason
         if self.masterId == 0:
             self.masterId = subject
+            self.log("pushWindow: WTF: stack has windows, but no master. Made window %d master" % subject.id)
+            self.con.command("move left")
+            self.setMasterWidth()
             return
 
         # Put new window at top of stack
@@ -77,6 +82,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Check if last window is being popped
         if self.stackIds == []:
             self.masterId = 0
+            self.log("popWindow: Closed last window, nothing to do")
             return
 
         # Move top of stack to master position
@@ -84,21 +90,23 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.con.command("[con_id=%s] focus" % self.masterId)
         self.con.command("move left")
         self.setMasterWidth()
+        self.log("popWindow: Moved top of stack to master")
 
 
     def rotateUp(self):
         # Exit if less than three windows
         if len(self.stackIds) < 2:
+            self.log("rotateUp: Only 2 windows, can't rotate")
             return
 
+        # Swap top of stack with master, then move old master to bottom
         newMaster = self.stackIds.pop()
         oldMaster = self.masterId
         bottom = self.stackIds[0]
-
-        # Swap top of stack with master, then move old master to bottom
-        self.log("New window id: %d" % newWindow.id)
         self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
+        self.log("rotateUp: swapped top of stack with master")
         self.moveWindow(oldMaster, bottom)
+        self.log("rotateUp: Moved previous master to bottom of stack")
 
         # Update record
         self.masterId = newMaster
