@@ -30,6 +30,25 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackLayout = options.stackLayout
 
 
+    def isExcluded(self, window):
+        if window is None:
+            return True
+
+        if window.type != "con":
+            return True
+
+        if window.workspace() is None:
+            return True
+
+        if window.floating is not None and "on" in window.floating:
+            return True
+
+        if window.type == "floating_con":
+            return True
+
+        return False
+
+
     def setMasterWidth(self):
         if self.masterWidth is not None:
             self.con.command('[con_id=%s] resize set %s 0 ppt' % (self.masterId, self.masterWidth))
@@ -138,6 +157,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def windowCreated(self, event):
         newWindow = utils.findFocused(self.con)
+
+        # Ignore excluded windows
+        if self.isExcluded(newWindow):
+            return
         
         # New window replcases master, master gets pushed to stack
         self.log("New window id: %d" % newWindow.id)
@@ -145,6 +168,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def windowFocused(self, event):
+        # Ignore excluded windows
+        if self.isExcluded(utils.findFocused(self.con)):
+            return
+
         # splith is not supported yet. idk how to differentiate between splith and nested splith.
         if self.stackIds != []:
             layout = self.stackLayout or "splitv"
@@ -156,6 +183,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def windowClosed(self, event):
+        # Ignore excluded windows
+        if self.isExcluded(utils.findFocused(self.con)):
+            return
+
         self.log("Closed window id: %d" % event.container.id)
 
         if self.masterId == event.container.id:
