@@ -178,7 +178,7 @@ def main():
     con.on(Event.WINDOW_FOCUS, windowFocused)
     con.on(Event.WINDOW_NEW, windowCreated)
     con.on(Event.WINDOW_CLOSE, windowClosed)
-    con.on(Event.WINDOW_MOVE, windowClosed)
+    con.on(Event.WINDOW_MOVE, windowMoved)
     con.on(Event.BINDING, recvBinding)
     log("swlm started")
 
