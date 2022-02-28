@@ -27,35 +27,44 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
         self.workspaceNum = workspace.num
         self.debug = options.debug
 
+    def isExcluded(self, window):
+        if window is None:
+            return True
+
+        if window.type != "con":
+            return True
+
+        if window.workspace() is None:
+            return True
+
+        if window.floating is not None and "on" in window.floating:
+            return True
+
+        if window.type == "floating_con":
+            return True
+
+        if window.fullscreen_mode == 1:
+            return True
+
+        if window.parent.layout == "stacked":
+            return True
+
+        if window.parent.layout == "tabbed":
+            return True
+
+        return False
 
     def switchSplit(self):
         focusedWindow = utils.findFocused(self.con)
-        if focusedWindow is not None and focusedWindow.workspace().id == self.workspaceId:
-            if focusedWindow.floating:
-                # We're on i3: on sway it would be None
-                # May be 'auto_on' or 'user_on'
-                isFloating = "_on" in focusedWindow.floating
-                isFullscreen = focusedWindow.fullscreen_mode == 1
-            else:
-                # We are on sway
-                isFloating = focusedWindow.type == "floating_con"
-                isFullscreen = focusedWindow.fullscreen_mode == 1
-
-            isStacked = focusedWindow.parent.layout == "stacked"
-            isTabbed = focusedWindow.parent.layout == "tabbed"
-
-            # Exclude floating containers, stacked layouts, tabbed layouts and full screen mode
-            if (not isFloating and not isStacked and not isTabbed and not isFullscreen):
-                newLayout = "splitv" if focusedWindow.rect.height > focusedWindow.rect.width else "splith"
-
-                if newLayout != focusedWindow.parent.layout:
-                    result = self.con.command(newLayout)
-                    if result[0].success:
-                        self.log("switchSplit: Switched to %s" % newLayout)
-                    elif debug:
-                        self.log("switchSplit: Error: Switch failed with err {}".format(result[0].error))
-
-        else :
+        if not self.isExcluded(focusedWindow) and focusedWindow.workspace().id == self.workspaceId:
+            newLayout = "splitv" if focusedWindow.rect.height > focusedWindow.rect.width else "splith"
+            if newLayout != focusedWindow.parent.layout:
+                result = self.con.command(newLayout)
+                if result[0].success:
+                    self.log("switchSplit: Switched to %s" % newLayout)
+                elif debug:
+                    self.log("switchSplit: Error: Switch failed with err {}".format(result[0].error))
+        else:
             self.log("switchSplit: No focused container found or autotiling on the workspace turned off")
 
 
