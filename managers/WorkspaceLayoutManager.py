@@ -28,6 +28,7 @@ class WorkspaceLayoutManager:
         if self.debug:
             print(("workspace %d: %s: " % (self.workspaceNum, self.__class__.__name__)) + msg)
 
+
     def windowCreated(self, event):
         pass
 
