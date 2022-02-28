@@ -26,24 +26,24 @@ Options:
                         "stacked", "splitv") default: splitv
 ```
 
-#### TODO
+### TODO
 
 - [ ] Differentiate WLMs that support managing existing windows
 - [ ] Add warning when enabling WLMs that don't support existing windows on a workspace with windows
 - [ ] More Layouts!
 - [ ] idk im probably forgetting a lot
 
-### Installation
+## Installation
 
 Because swlm is still early in development, I haven't come up with a way to package it yet. For now, clone this
 repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your PATH.
 
-### Layout Managers
+## Layout Managers
 
 The layout manager controlling a workspace can be dynamically changed using the command `nop layout <LAYOUT>`.
 
 
-#### none
+### none
 
 The `none` layout manager does not manage any windows. It exists as a reference implementation, and to allow users
 to disable layout management on a given workspace.
@@ -53,7 +53,7 @@ Binding:
 bindym <your bind here> nop layout none # disable layout management on a workspace
 ```
 
-#### Autotiling
+### Autotiling
 
 Based on nwg-piotr's [autotiling](https://github.com/nwg-piotr/autotiling/blob/master/autotiling/main.py),
 the `Autotiling` layout manager alternates between splith and splitv based on a windows height/width ratio.
@@ -64,7 +64,7 @@ Binding:
 bindym <your bind here> nop layout Autotiling # set focused workspace's layout manager to Autotiling
 ```
 
-#### MasterStack
+### MasterStack
 
 `MasterStack` is inspired by dwm/dwl/river, but is my own take on it. implements a master window with a stack
 on the right side. When a new window is created, it replaces master and master is placed on top of the stack.
