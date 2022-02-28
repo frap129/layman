@@ -132,26 +132,35 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackIds.insert(0, oldMaster)
 
 
-    def swap_master(self):
+    def swapMaster(self):
         # Exit if less than two windows
-        if self.stack_ids == []:
+        if self.stackIds == []:
+            self.log("swapMaster: Stack emtpy, can't swap")
             return
             
-        focused_window = utils.findFocused(self.con)
+        focusedWindow = utils.findFocused(self.con)
 
-        if focused_window is None:
+        if focusedWindow is None:
+            self.log("swapMaster: No window focused, can't swap")
             return
-        
-        if focused_window.id == self.master_id:
+
+        # If focus is master, swap with top of stack
+        if focusedWindow.id == self.masterId:
+            target = self.stackIds.pop()
+            self.con.command("[con_id=%d] swap container with con_id %d" % (target, self.masterId))
+            self.stackIds.append(self.masterId)
+            self.masterId = target
+            self.log("swapMaster: Swapped master with top of stack")
             return
 
         # Find focused window in record
-        for i in range(len(self.stack_ids)):
-            if self.stack_ids[i] == focused_window.id:
+        for i in range(len(self.stackIds)):
+            if self.stackIds[i] == focusedWindow.id:
                 # Swap window with master
-                self.con.command("[con_id=%d] swap container with con_id %d" % (focused_window.id, self.master_id))
-                self.stack_ids[i] = self.master_id
-                self.master_id = focused_window.id
+                self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.masterId))
+                self.stackIds[i] = self.masterId
+                self.masterId = focusedWindow.id
+                self.log("swapMaster: Swapped master with window %d" % focusedWindow.id)
                 return
 
 
