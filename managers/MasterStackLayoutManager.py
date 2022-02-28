@@ -73,11 +73,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Swap with master
         oldMaster = self.masterId
         self.con.command("[con_id=%s] swap container with con_id %s" % (subject, oldMaster))
-        self.setMasterWidth()
-
-        # Update record
         self.stackIds.append(self.masterId)
         self.masterId = subject
+        self.setMasterWidth()
 
 
     def popWindow(self):
@@ -159,12 +157,17 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def windowClosed(self, event):
         self.log("Closed window id: %d" % event.container.id)
-        # Try to remove window from stack, catch if its on a different workspace
-        try:
-            self.stackIds.remove(event.container.id)
-            return
-        except BaseException as e:
-            return
+
+        if self.masterId == event.container.id:
+            # If window is master, pop the next one off the stack
+            self.popWindow()
+        else:
+            # If window is not master, remove from stack and exist
+            try:
+                self.stackIds.remove(event.container.id)
+            except BaseException as e:
+                # This should never happen
+                self.log("windowClosed: WTF: window not master or in stack")
 
 
     def binding(self, command):
