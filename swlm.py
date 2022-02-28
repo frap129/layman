@@ -158,7 +158,7 @@ def recvBinding(con, event):
         return
         
     log("recvCommand: calling manager for workspace %d" % workspace.num)
-    managers[workspace.num].binding(event)
+    managers[workspace.num].binding(command)
 
 def onWorkspace(con, event):
     workspace = findFocusedWorkspace(con)
