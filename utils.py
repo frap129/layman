@@ -65,13 +65,13 @@ def getUserOptions():
                       type="int",
                       action="store",
                       metavar="WIDTH",
-                      help="The percent screen width the master window should fill.")
+                      help="MasterStack only: the percent screen width the master window should fill.")
     parser.add_option("-l",
                       "--stack-layout",
                       dest="stackLayout",
                       action="store",
                       metavar="LAYOUT",
-                      help='The stack layout. ("tabbed", "stacked", "splitv") default: splitv',
+                      help='MasterStack only: The layout of the stack. ("tabbed", "stacked", "splitv") default: splitv',
                       choices=["tabbed", "stacked", "splitv"])  # splith not yet supported
     
     return parser.parse_args()[0]
