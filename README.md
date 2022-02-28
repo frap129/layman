@@ -28,8 +28,11 @@ Options:
 
 ### TODO
 
+- [ ] Config file with more options
 - [ ] Differentiate WLMs that support managing existing windows
-- [ ] Add warning when enabling WLMs that don't support existing windows on a workspace with windows
+  - [ ] Add warning (swaynag?) when enabling WLMs that don't support existing windows on a workspace with windows
+- [ ] Differentiate WLMs that support window movement
+  - [ ] Add wrappers for window movement. Defaults would be used for WLMs that support movement, but WLMs that don't can override with better defaults (ex for MasterStack: replace up/down with move up/down in stack, left/right with rotation)
 - [ ] More Layouts!
 - [ ] idk im probably forgetting a lot
 
