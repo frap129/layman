@@ -15,6 +15,8 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
+from collections import deque
+
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 import utils
 
@@ -24,7 +26,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
         self.masterId = 0
-        self.stackIds = []
+        self.stackIds = deque([])
         self.debug = options.debug
         self.masterWidth = options.masterWidth
         self.stackLayout = options.stackLayout
@@ -112,10 +114,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("popWindow: Moved top of stack to master")
 
 
-    def rotateUp(self):
+    def rotateCCW(self):
         # Exit if less than three windows
         if len(self.stackIds) < 2:
-            self.log("rotateUp: Only 2 windows, can't rotate")
+            self.log("rotateCCW: Only 2 windows, can't rotate")
             return
 
         # Swap top of stack with master, then move old master to bottom
@@ -123,13 +125,35 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         oldMaster = self.masterId
         bottom = self.stackIds[0]
         self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
-        self.log("rotateUp: swapped top of stack with master")
+        self.log("rotateCCW: swapped top of stack with master")
         self.moveWindow(oldMaster, bottom)
-        self.log("rotateUp: Moved previous master to bottom of stack")
+        self.log("rotateCCW: Moved previous master to bottom of stack")
 
         # Update record
         self.masterId = newMaster
-        self.stackIds.insert(0, oldMaster)
+        self.stackIds.appendleft(oldMaster)
+
+    def rotateCW(self):
+        # Exit if less than three windows
+        if len(self.stackIds) < 2:
+            self.log("rotateCW: Only 2 windows, can't rotate")
+            return
+
+        # Swap bottom of stack with master, then move old master to top
+        newMaster = self.stackIds.popleft()
+        oldMaster = self.masterId
+        top = self.stackIds[-1]
+        self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
+        self.log("rotateCW: swapped bottom of stack with master")
+        self.moveWindow(oldMaster, top)
+        self.con.command("[con_id=%s] focus" % oldMaster)
+        self.con.command("move up")
+        self.con.command("[con_id=%s] focus" % newMaster)
+        self.log("rotateCW: Moved previous master to top of stack")
+
+        # Update record
+        self.masterId = newMaster
+        self.stackIds.append(oldMaster)
 
 
     def swapMaster(self):
@@ -211,7 +235,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def binding(self, command):
-        if command == "nop rotate up":
-            self.rotateUp()
+        if command == "nop rotate ccw":
+            self.rotateCCW()
+        elif command == "nop rotate cw":
+            self.rotateCW()
         elif command == "nop swap master":
             self.swapMaster()
