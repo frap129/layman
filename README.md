@@ -66,11 +66,11 @@ bindym <your bind here> nop layout Autotiling # set focused workspace's layout m
 
 ### MasterStack
 
-`MasterStack` is inspired by dwm/dwl/river, but is my own take on it. implements a master window with a stack
+`MasterStack` is inspired by dwm/dwl/river, but is my own take on it. It implements a master window with a stack
 on the right side. When a new window is created, it replaces master and master is placed on top of the stack.
-If the master window is deleted, the top of the stack replaces master. MasterStack implements a keybind for
+If the master window is deleted, the top of the stack replaces master. `MasterStack` implements a keybind for
 swapping. When swapping, the focused window is swapped with master. If the focused window is master, it gets
-swapped with the top of the stack. MasterStack also (partially) implements rotation. When rotating, master is
+swapped with the top of the stack. `MasterStack` also (partially) implements rotation. When rotating, master is
 moved to the bottom of the stack, and the top of the stack becomes the new master. This can be visualized as
 rotating the layout couter-clockwise by 1 window.
 
