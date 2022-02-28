@@ -20,6 +20,7 @@ from i3ipc import Event, Connection
 from setproctitle import setproctitle
 
 import utils
+from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 from managers.MasterStackLayoutManager import MasterStackLayoutManager
 from managers.AutotilingLayoutManager import AutotilingLayoutManager
 
