@@ -66,7 +66,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def pushWindow(self, subject):
         # Only record window if stack is empty
-        if self.stackIds == []:
+        if len(self.stackIds) == 0:
             # Check if master is empty too
             if self.masterId == 0:
                 self.log("pushWindow: Made window %d master" % subject)
@@ -101,7 +101,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def popWindow(self):
         # Check if last window is being popped
-        if self.stackIds == []:
+        if len(self.stackIds) == 0:
             self.masterId = 0
             self.log("popWindow: Closed last window, nothing to do")
             return
@@ -158,7 +158,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def swapMaster(self):
         # Exit if less than two windows
-        if self.stackIds == []:
+        if len(self.stackIds) == 0:
             self.log("swapMaster: Stack emtpy, can't swap")
             return
             
@@ -206,7 +206,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return
 
         # splith is not supported yet. idk how to differentiate between splith and nested splith.
-        if self.stackIds != []:
+        if len(self.stackIds) > 0:
             layout = self.stackLayout or "splitv"
             bottom = self.stackIds[0]
             self.con.command("[con_id=%d] split vertical" % bottom)
