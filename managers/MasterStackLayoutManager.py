@@ -109,8 +109,12 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Move top of stack to master position
         self.masterId = self.stackIds.pop()
         self.con.command("[con_id=%s] focus" % self.masterId)
-        self.con.command("move left")
-        self.setMasterWidth()
+
+        # If stack is not empty, we need to move the view to the master position
+        if len(self.stackIds) != 0:
+            self.con.command("move left")
+            self.setMasterWidth()
+
         self.log("popWindow: Moved top of stack to master")
 
 
