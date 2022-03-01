@@ -114,6 +114,57 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("popWindow: Moved top of stack to master")
 
 
+    def moveUp(self):
+        focusedWindow = utils.findFocused(self.con)
+
+        if focusedWindow is None:
+            self.log("moveUp: No window focused, can't move")
+            return
+
+        # Swap master and top of stack if only two windows, or focus is top of stack
+        if len(self.stackIds) < 2 or focusedWindow.id == self.stackIds[-1]:
+            target = self.stackIds.pop()
+            self.con.command("[con_id=%d] swap container with con_id %d" % (target, self.masterId))
+            self.stackIds.append(self.masterId)
+            self.masterId = target
+            self.log("moveUp: Swapped window %d with master" % target)
+            return
+
+        for i in range(len(self.stackIds)):
+            if self.stackIds[i] == focusedWindow.id:
+                # Swap window with window above
+                self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[i+1]))
+                self.stackIds[i] = self.stackIds[i+1]
+                self.stackIds[i+1] = focusedWindow.id
+                self.log("moveUp: Swapped window %d with %d" % (focusedWindow.id, self.stackIds[i]))
+                return
+
+
+    def moveDown(self):
+        # Check if stack only has one window
+        if len(self.stackIds) < 2:
+            return
+
+        focusedWindow = utils.findFocused(self.con)
+        if focusedWindow is None:
+            self.log("moveDown: No window focused, can't move")
+            return
+
+        # Check if we hit bottom of stack
+        if focusedWindow == self.stackIds[0]:
+            self.log("moveDown: Bottom of stack, nowhere to go")
+            return
+
+        for i in range(len(self.stackIds)):
+            if self.stackIds[i] == focusedWindow.id:
+                # Swap window with window below
+                self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[i-1]))
+                self.stackIds[i] = self.stackIds[i-1]
+                self.stackIds[i-1] = focusedWindow.id
+                self.log("moveDown: Swapped window %d with %d" % (focusedWindow.id, self.stackIds[i]))
+                return
+
+
     def rotateCCW(self):
         # Exit if less than three windows
         if len(self.stackIds) < 2:
@@ -132,6 +183,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Update record
         self.masterId = newMaster
         self.stackIds.appendleft(oldMaster)
+
 
     def rotateCW(self):
         # Exit if less than three windows
@@ -235,9 +287,13 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def binding(self, command):
-        if command == "nop rotate ccw":
+        if command == "nop swlm move up":
+            self.moveUp()
+        elif command == "nop swlm move down":
+            self.moveDown()
+        elif command == "nop swlm rotate ccw":
             self.rotateCCW()
-        elif command == "nop rotate cw":
+        elif command == "nop swlm rotate cw":
             self.rotateCW()
-        elif command == "nop swap master":
+        elif command == "nop swlm swap master":
             self.swapMaster()
