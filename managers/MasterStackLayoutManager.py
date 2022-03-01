@@ -45,9 +45,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if window.floating is not None and "on" in window.floating:
             return True
 
-        if window.type == "floating_con":
-            return True
-
         return False
 
 
@@ -65,23 +62,18 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def pushWindow(self, subject):
-        # Only record window if stack is empty
-        if len(self.stackIds) == 0:
-            # Check if master is empty too
-            if self.masterId == 0:
-                self.log("pushWindow: Made window %d master" % subject)
-                self.masterId = subject
-            else:
-                self.stackIds.append(subject)
-                self.log("pushWindow: Initialized stack with window %d" % subject)
-                self.setMasterWidth()
+        # Check if master is empty too
+        if self.masterId == 0:
+            self.log("pushWindow: Made window %d master" % subject)
+            self.masterId = subject
             return
 
-        # Check if we're missing master but have a stack, for some reason
-        if self.masterId == 0:
+        # Only record window if stack is empty
+        if len(self.stackIds) == 0:
+            self.stackIds.append(self.masterId)
+            self.con.command("[con_id=%s] swap container with con_id %s" % (subject, self.masterId))
             self.masterId = subject
-            self.log("pushWindow: WTF: stack has windows, but no master. Made window %d master" % subject)
-            self.con.command("move left")
+            self.log("pushWindow: Initialized stack with window %d" % subject)
             self.setMasterWidth()
             return
 
@@ -198,9 +190,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
         self.log("rotateCW: swapped bottom of stack with master")
         self.moveWindow(oldMaster, top)
-        self.con.command("[con_id=%s] focus" % oldMaster)
+        self.con.command("[con_id=%d] focus" % oldMaster)
         self.con.command("move up")
-        self.con.command("[con_id=%s] focus" % newMaster)
+        self.con.command("[con_id=%d] focus" % newMaster)
         self.log("rotateCW: Moved previous master to top of stack")
 
         # Update record
@@ -240,6 +232,47 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 return
 
 
+    def setStackLayout(self):
+        # splith is not supported yet. idk how to differentiate between splith and nested splith.
+        if len(self.stackIds) != 0:
+            layout = self.stackLayout or "splitv"
+            bottom = self.stackIds[0]
+            self.con.command("[con_id=%d] split vertical" % bottom)
+            self.con.command("[con_id=%d] layout %s" % (bottom, layout))
+        else:
+            self.con.command("[con_id=%d] split horizontal" % self.masterId)
+            self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
+
+
+    def arrangeExistingLayout(self, window):
+        workspace = window.workspace()
+        untracked = [window.id]
+        for node in workspace.nodes:
+            if node.id != self.masterId and node.id not in self.stackIds:
+                # Check if window should remain untracked
+                if (self.isExcluded(node)):
+                    continue
+
+                # Flaot it to remove it from the current layout
+                self.con.command("[con_id=%s] focus" % node.id)
+                self.con.command("floating toggle")
+                untracked.append(node.id)
+                self.log("arrangeExistingLayout: Found untracked window %d" % node.id)
+
+        self.setStackLayout()
+        for windowId in untracked:
+            if windowId != self.masterId and windowId not in self.stackIds:
+                # Unfloat the window, then treat it like a new window
+                self.con.command("[con_id=%s] focus" % windowId)
+                self.con.command("floating tooggle")
+                self.pushWindow(windowId)
+                self.log("arrangeExistingLayout: Pushed window %d" % windowId)
+            else:
+                self.setStackLayout()
+
+        self.log("arrangeExistingLayout: masterId is %d" % self.masterId)
+
+
     def windowCreated(self, event):
         newWindow = utils.findFocused(self.con)
 
@@ -253,18 +286,30 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def windowFocused(self, event):
+        focusedWindow = utils.findFocused(self.con)
         # Ignore excluded windows
-        if self.isExcluded(utils.findFocused(self.con)):
+        if self.isExcluded(focusedWindow):
             return
 
-        # splith is not supported yet. idk how to differentiate between splith and nested splith.
-        if len(self.stackIds) > 0:
-            layout = self.stackLayout or "splitv"
-            bottom = self.stackIds[0]
-            self.con.command("[con_id=%d] split vertical" % bottom)
-            self.con.command("[con_id=%d] layout %s" % (bottom, layout))
-        else:
-            self.con.command("[con_id=%d] split horizontal" % self.masterId)
+        # Handle window if it's not currently being tracked
+        if self.masterId != focusedWindow.id and focusedWindow.id not in self.stackIds:
+            # TODO: Handle arranging existing layout. Just treat like a single untracked window for now
+            return
+
+        self.setStackLayout()
+
+
+    def windowMoved(self, event):
+        focusedWindow = utils.findFocused(self.con)
+        # Ignore excluded windows
+        if self.isExcluded(focusedWindow):
+            return
+
+        # Handle window if it's not currently being tracked
+        if self.masterId != focusedWindow.id and focusedWindow.id not in self.stackIds:
+            self.pushWindow(focusedWindow.id)
+            self.log("windowMoved: Pushed untracked window %d" % focusedWindow.id)
+            return
 
 
     def windowClosed(self, event):

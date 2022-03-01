@@ -40,9 +40,6 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
         if window.floating is not None and "on" in window.floating:
             return True
 
-        if window.type == "floating_con":
-            return True
-
         if window.fullscreen_mode == 1:
             return True
 
