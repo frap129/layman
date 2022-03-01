@@ -62,14 +62,18 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def pushWindow(self, subject):
-        # Check if master is empty too
+        # Check if master is empty
         if self.masterId == 0:
             self.log("pushWindow: Made window %d master" % subject)
             self.masterId = subject
             return
 
-        # Only record window if stack is empty
+        # Check if we need to initialize the stack
         if len(self.stackIds) == 0:
+            # Make sure the window is in a valid position
+            self.moveWindow(subject, self.masterId)
+
+            # Swap with master
             self.stackIds.append(self.masterId)
             self.con.command("[con_id=%s] swap container with con_id %s" % (subject, self.masterId))
             self.masterId = subject
