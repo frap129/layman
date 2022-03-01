@@ -268,10 +268,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def windowClosed(self, event):
-        # Ignore excluded windows
-        if self.isExcluded(utils.findFocused(self.con)):
-            return
-
         self.log("Closed window id: %d" % event.container.id)
 
         if self.masterId == event.container.id:
@@ -282,7 +278,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             try:
                 self.stackIds.remove(event.container.id)
             except BaseException as e:
-                # This should never happen
+                # This should only happen if an untracked window was closed
                 self.log("windowClosed: WTF: window not master or in stack")
 
 
