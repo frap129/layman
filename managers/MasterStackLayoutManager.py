@@ -244,7 +244,12 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             if self.stackIds[i] == focusedWindow.id:
                 # Swap window with master
                 self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.masterId))
+
+                # Refocus the previous master
+                self.con.command("[con_id=%d] focus" % self.masterId)
                 self.stackIds[i] = self.masterId
+
+                # Update record
                 self.masterId = focusedWindow.id
                 self.log("swapMaster: Swapped master with window %d" % focusedWindow.id)
                 return
