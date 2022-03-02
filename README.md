@@ -36,8 +36,8 @@ Options:
   - [ ] Add warning (swaynag?) when enabling WLMs that don't support existing windows on a workspace with windows
 - [ ] More Layouts!
 - [ ] MasterStack:
-  - [ ] Fix stack window sizes changes when moving up/down
-  - [ ] If user changes the size of master, maintain that size
+  - [ ] Maintain user-set window sizes for each wndow position
+  - [ ] Handle windows moved out of layout
   - [ ] Automatically arrange pre-existing windows into correct layout
 - [ ] idk im probably forgetting a lot
 - [X] ~Differentiate WLMs that support window movement~
@@ -50,7 +50,7 @@ repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your
 
 ## Layout Managers
 
-The layout manager controlling a workspace can be dynamically changed using the command `nop layout <LAYOUT>`. In
+The layout manager controlling a workspace can be dynamically changed using the command `nop swlm layout <LAYOUT>`. In
 order to handle window movement in layouts that don't use standard sway up/down/left/right, a WLM can override
 these commands with better defaults, and swlm will fall back the regular command for WLMs that don't. To use the
 WLM provided movement commands, replace your `move <direction>` bindsyms with
@@ -105,4 +105,6 @@ bindym <your bind here> nop swlm layout MasterStack # set focused workspace's la
 bindym <your bind here> nop swlm swap master # swap focused window with master
 bindym <your bind here> nop swlm rotate cw # rotate layout cw 1 window
 bindym <your bind here> nop swlm rotate ccw # rotate layout ccw 1 window
+bindym <your bind here> nop swlm move up # move focused winodw up 1 position in the stack
+bindym <your bind here> nop swlm move down # move focused window down one position in the stack
 ```
