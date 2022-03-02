@@ -55,7 +55,6 @@ bindsym $mod+Shift+Up nop swlm move up
 bindsym $mod+Shift+Right nop swlm move right
 ```
 
-
 ### none
 
 The `none` layout manager does not manage any windows. It exists as a reference implementation, and to allow users
@@ -90,6 +89,7 @@ rotating clockwise moves master to the top of the stack, and the bottom of the s
 `MasterStack` provides overrides for `move <directon>` binds. 
 
 Known bugs:
+- Breaks when a window is moved to a different workspace
 - Only works correctly if workspace has no windows when its created.
 
 Bindings:
