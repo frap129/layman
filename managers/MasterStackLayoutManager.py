@@ -21,6 +21,8 @@ from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 import utils
 
 class MasterStackLayoutManager(WorkspaceLayoutManager):
+    overridesMoveBinds = True
+
     def __init__(self, con, workspace, options):
         self.con = con
         self.workspaceId = workspace.ipc_data["id"]
@@ -50,7 +52,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def setMasterWidth(self):
         if self.masterWidth is not None:
-            self.con.command('[con_id=%s] resize set %s 0 ppt' % (self.masterId, self.masterWidth))
+            self.con.command("[con_id=%s] resize set %s 0 ppt" % (self.masterId, self.masterWidth))
             self.log("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
@@ -151,8 +153,16 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return
 
         # Check if we hit bottom of stack
-        if focusedWindow == self.stackIds[0]:
+        if focusedWindow.id == self.stackIds[0]:
             self.log("moveDown: Bottom of stack, nowhere to go")
+            return
+
+        # Swap with top of stack if master is focused
+        if focusedWindow.id == self.masterId:
+            self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[-1]))
+            self.masterId = self.stackIds.pop()
+            self.stackIds.append(focusedWindow.id)
+            self.log("moveDown: Swapped master %d with top of stack %d" % (self.stackIds[-1], self.masterId))
             return
 
         for i in range(len(self.stackIds)):
@@ -280,6 +290,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         self.log("arrangeExistingLayout: masterId is %d" % self.masterId)
 
+
     def removeWindow(self, windowId):
         if self.masterId == windowId:
             # If window is master, pop the next one off the stack
@@ -342,9 +353,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.moveUp()
         elif command == "nop swlm move down":
             self.moveDown()
-        elif command == "nop swlm rotate ccw":
+        elif command == "nop swlm rotate ccw" or command == "nop swlm move left":
             self.rotateCCW()
-        elif command == "nop swlm rotate cw":
+        elif command == "nop swlm rotate cw"or command == "nop swlm move right":
             self.rotateCW()
         elif command == "nop swlm swap master":
             self.swapMaster()
