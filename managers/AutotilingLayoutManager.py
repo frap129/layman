@@ -19,8 +19,10 @@ swlm. If not, see <https://www.gnu.org/licenses/>.
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 import utils
 
-# AutolingLayoutManager, adapted from nwg-piotr's autiling script
+# AutolingLayoutManager, adapted from nwg-piotr's autotiling script
 class AutotilingLayoutManager(WorkspaceLayoutManager):
+    shortName = "Autotiling"
+
     def __init__(self, con, workspace, options):
         self.con = con
         self.workspaceId = workspace.ipc_data["id"]
@@ -58,12 +60,9 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
             if newLayout != focusedWindow.parent.layout:
                 result = self.con.command(newLayout)
                 if result[0].success:
-                    self.log("switchSplit: Switched to %s" % newLayout)
+                    self.log("Switched to %s" % newLayout)
                 elif debug:
-                    self.log("switchSplit: Error: Switch failed with err {}".format(result[0].error))
-        else:
-            self.log("switchSplit: No focused container found or autotiling on the workspace turned off")
-
+                    self.log("Error: Switch failed with err {}".format(result[0].error))
 
     def windowCreated(self, event):
         self.switchSplit()
@@ -79,7 +78,3 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
 
     def windowMoved(self, event):
         self.switchSplit()
-
-
-    def binding(self, command):
-        pass
