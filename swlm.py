@@ -158,7 +158,7 @@ def setWorkspaceLayoutManager(con, workspace):
             logCaller("Initialized workspace %d with %s" % (workspace.num, managers[workspace.num].shortName))
         elif options.default == MasterStackLayoutManager.shortName:
             managers[workspace.num] = MasterStackLayoutManager(con, workspace, options)
-            logCaller("Initialized workspace %s" % (workspace.num, managers[workspace.num].shortName))
+            logCaller("Initialized workspace %d wth %s" % (workspace.num, managers[workspace.num].shortName))
 
 
 def findFocusedWorkspace(con):
