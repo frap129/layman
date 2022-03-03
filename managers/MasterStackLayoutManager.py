@@ -114,44 +114,44 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.logCaller("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
-    def moveWindow(self, subject, target):
-        self.con.command("[con_id=%d] mark --add move_target" % target)
-        self.con.command("[con_id=%d] move container to mark move_target" % subject)
-        self.con.command("[con_id=%d] unmark move_target" % target)
-        self.logCaller("Moved window %s to mark on window %s" % (subject, target))
+    def moveWindow(self, moveId, targetId):
+        self.con.command("[con_id=%d] mark --add move_target" % targetId)
+        self.con.command("[con_id=%d] move container to mark move_target" % moveId)
+        self.con.command("[con_id=%d] unmark move_target" % targetId)
+        self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
 
 
-    def pushWindow(self, subject):
+    def pushWindow(self, windowId):
         # Check if master is empty
         if self.masterId == 0:
-            self.log("Made window %d master" % subject)
-            self.masterId = subject
+            self.log("Made window %d master" % windowId)
+            self.masterId = windowId
             return
 
         # Check if we need to initialize the stack
         if len(self.stackIds) == 0:
             # Make sure the new window is in a valid position
-            self.moveWindow(subject, self.masterId)
+            self.moveWindow(windowId, self.masterId)
 
             # Swap with master
             self.stackIds.append(self.masterId)
             self.con.command("move left")
-            self.masterId = subject
-            self.log("Initialized stack with %d, new master %d" % (self.stackIds[0], subject))
+            self.masterId = windowId
+            self.log("Initialized stack with %d, new master %d" % (self.stackIds[0], windowId))
             self.setMasterWidth()
             return
 
         # Put new window at top of stack
-        target = self.stackIds[-1]
-        self.moveWindow(subject, target)
-        self.con.command("[con_id=%s] focus" % subject)
+        targetId = self.stackIds[-1]
+        self.moveWindow(windowId, targetId)
+        self.con.command("[con_id=%s] focus" % windowId)
         self.con.command("move up")
 
         # Swap with master
-        oldMaster = self.masterId
-        self.con.command("[con_id=%s] swap container with con_id %s" % (subject, oldMaster))
+        prevMasterId = self.masterId
+        self.con.command("[con_id=%s] swap container with con_id %s" % (windowId, prevMasterId))
         self.stackIds.append(self.masterId)
-        self.masterId = subject
+        self.masterId = windowId
         self.setMasterWidth()
 
 
@@ -237,11 +237,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         # Swap master and top of stack if only two windows, or focus is top of stack
         if len(self.stackIds) < 2 or focusedWindow.id == self.stackIds[-1]:
-            target = self.stackIds.pop()
-            self.con.command("[con_id=%d] swap container with con_id %d" % (target, self.masterId))
+            targetId = self.stackIds.pop()
+            self.con.command("[con_id=%d] swap container with con_id %d" % (targetId, self.masterId))
             self.stackIds.append(self.masterId)
-            self.masterId = target
-            self.log("Swapped window %d with master" % target)
+            self.masterId = targetId
+            self.log("Swapped window %d with master" % targetId)
             return
 
         for i in range(len(self.stackIds)):
@@ -294,17 +294,17 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return
 
         # Swap top of stack with master, then move old master to bottom
-        newMaster = self.stackIds.pop()
-        oldMaster = self.masterId
-        bottom = self.stackIds[0]
-        self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
+        newMasterId = self.stackIds.pop()
+        prevMasterId = self.masterId
+        bottomId = self.stackIds[0]
+        self.con.command("[con_id=%d] swap container with con_id %d" % (newMasterId, prevMasterId))
         self.log("swapped top of stack with master")
-        self.moveWindow(oldMaster, bottom)
+        self.moveWindow(prevMasterId, bottomId)
         self.log("Moved previous master to bottom of stack")
 
         # Update record
-        self.masterId = newMaster
-        self.stackIds.appendleft(oldMaster)
+        self.masterId = newMasterId
+        self.stackIds.appendleft(prevMasterId)
 
 
     def rotateCW(self):
@@ -314,20 +314,20 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return
 
         # Swap bottom of stack with master, then move old master to top
-        newMaster = self.stackIds.popleft()
-        oldMaster = self.masterId
-        top = self.stackIds[-1]
-        self.con.command("[con_id=%d] swap container with con_id %d" % (newMaster, oldMaster))
+        newMasterId = self.stackIds.popleft()
+        prevMasterId = self.masterId
+        topId = self.stackIds[-1]
+        self.con.command("[con_id=%d] swap container with con_id %d" % (newMasterId, prevMasterId))
         self.log("swapped bottom of stack with master")
-        self.moveWindow(oldMaster, top)
-        self.con.command("[con_id=%d] focus" % oldMaster)
+        self.moveWindow(prevMasterId, topId)
+        self.con.command("[con_id=%d] focus" % prevMasterId)
         self.con.command("move up")
-        self.con.command("[con_id=%d] focus" % newMaster)
+        self.con.command("[con_id=%d] focus" % newMasterId)
         self.log("Moved previous master to top of stack")
 
         # Update record
-        self.masterId = newMaster
-        self.stackIds.append(oldMaster)
+        self.masterId = newMasterId
+        self.stackIds.append(prevMasterId)
 
 
     def swapMaster(self):
@@ -344,10 +344,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         # If focus is master, swap with top of stack
         if focusedWindow.id == self.masterId:
-            target = self.stackIds.pop()
-            self.con.command("[con_id=%d] swap container with con_id %d" % (target, self.masterId))
+            targetId = self.stackIds.pop()
+            self.con.command("[con_id=%d] swap container with con_id %d" % (targetId, self.masterId))
             self.stackIds.append(self.masterId)
-            self.masterId = target
+            self.masterId = targetId
             self.log("Swapped master with top of stack")
             return
 
