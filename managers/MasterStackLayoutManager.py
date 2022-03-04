@@ -35,16 +35,21 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackLayout = options.stackLayout
 
 
-    def windowCreated(self, event):
+    def windowAdded(self, event):
         newWindow = utils.findFocused(self.con)
 
         # Ignore excluded windows
         if self.isExcluded(newWindow):
             return
         
-        # New window replcases master, master gets pushed to stack
+        # New window replaces master, master gets pushed to stack
         self.log("New window id: %d" % newWindow.id)
         self.pushWindow(newWindow.id)
+
+
+    def windowRemoved(self, event):
+        self.log("Closed window id: %d" % event.container.id)
+        self.removeWindow(event.container.id)
 
 
     def windowFocused(self, event):
@@ -59,24 +64,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.masterId != focusedWindow.id and focusedWindow.id not in self.stackIds:
             # TODO: Handle arranging existing layout. Just treat like a single untracked window for now
             return
-
-
-    def windowMoved(self, event):
-        focusedWindow = utils.findFocused(self.con)
-        # Ignore excluded windows
-        if self.isExcluded(focusedWindow):
-            return
-
-        # Handle window if it's not currently being tracked
-        if self.masterId != focusedWindow.id and focusedWindow.id not in self.stackIds:
-            self.pushWindow(focusedWindow.id)
-            self.log("Pushed untracked window %d" % focusedWindow.id)
-            return
-
-
-    def windowClosed(self, event):
-        self.log("Closed window id: %d" % event.container.id)
-        self.removeWindow(event.container.id)
 
 
     def onBinding(self, command):

@@ -67,15 +67,15 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
                 self.log("Error: Switch failed with err {}".format(result[0].error))
 
 
-    def windowCreated(self, event):
+    def windowAdded(self, event):
+        self.switchSplit()
+
+
+    def windowRemoved(self, event):
         self.switchSplit()
 
 
     def windowFocused(self, event):
-        self.switchSplit()
-
-
-    def windowClosed(self, event):
         self.switchSplit()
 
 
