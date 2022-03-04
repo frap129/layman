@@ -33,6 +33,7 @@ class WorkspaceLayoutManagerDict(dict):
 
 options = utils.getUserOptions()
 managers = WorkspaceLayoutManagerDict()
+workspaceWindows = WorkspaceLayoutManagerDict()
 
 
 def windowCreated(con, event):
@@ -42,13 +43,19 @@ def windowCreated(con, event):
         log("Workspace or output excluded")
         return
 
-    # Pass command to the appropriate manager
+    # Check if we have a layoutmanager
     if workspace.num not in managers:
         log("No manager for workpsace %d, ignoring" % workspace.num)
         return
 
+    # Store window
+    window = utils.findFocused(con)
+    if window is not None:
+        workspaceWindows[workspace.num].append(window.id)
+
+    # Pass event to the layout manager
     log("Calling manager for workspace %d" % workspace.num)
-    managers[workspace.num].windowCreated(event)
+    managers[workspace.num].windowAdded(event)
 
 
 def windowFocused(con, event):
@@ -74,35 +81,61 @@ def windowClosed(con, event):
         log("Workspace or output excluded")
         return
 
-    # Pass command to the appropriate manager
+    # Check if we have a manager
     if workspace.num not in managers:
         log("No manager for workpsace %d, ignoring" % workspace.num)
         return
 
+    # Remove window
+    try:
+        workspaceWindows[workspace.num].remove(event.container.id)
+    except BaseException as e:
+        log("Untracked window %d closed on %d" % (event.container.id, workspace.num))
+
+    # Pass command to the appropriate manager
     log("Calling manager for workspace %d" % workspace.num)
-    managers[workspace.num].windowClosed(event)
+    managers[workspace.num].windowRemoved(event)
 
 
 def windowMoved(con, event):
     # Check if we should pass this call to a manager
-    workspace = findFocusedWorkspace(con)
+    window = utils.findFocused(con)
+    workspace = window.workspace()
     if isExcluded(workspace):
         log("Workspace or output excluded")
         return
 
-    # Pass command to the appropriate manager
+    # Ensure the workspace is being managed first
     if workspace.num not in managers:
         log("No manager for workpsace %d, ignoring" % workspace.num)
         return
 
-    log("Calling manager for workspace %d" % workspace.num)
+    # Check if the window has moved workspaces
+    if window.id not in workspaceWindows[workspace.num]:
+        log("Window untracked, or changed workspaces")
+        # Find the windows old workspace
+        for workspaceNum in managers:
+            if window.id in workspaceWindows[workspaceNum]:
+                # Call windowRemoved on old workspace
+                log("Calling windowRemoved for workspace %d" % workspaceNum)
+                workspaceWindows[workspaceNum].remove(window.id)
+                managers[workspaceNum].windowRemoved(event)
+
+                # Call windowAdded on new workspace
+                log("Calling windowAdded for workspace %d" % workspace.num)
+                workspaceWindows[workspace.num].append(window.id)
+                managers[workspace.num].windowAdded(event)
+                return
+
+    # Window has moved within a workspace, call windowMoved
+    log("Calling windowMoved for workspace %d" % workspace.num)
     managers[workspace.num].windowMoved(event)
 
 
 def onBinding(con, event):
     # Exit early if binding isnt for slwm
     command = event.ipc_data["binding"]["command"].strip()
-    if "nop" not in command:
+    if "nop swlm" not in command:
         return
         
     # Check if we should pass this call to a manager
@@ -159,6 +192,8 @@ def setWorkspaceLayoutManager(con, workspace):
         elif options.default == MasterStackLayoutManager.shortName:
             managers[workspace.num] = MasterStackLayoutManager(con, workspace, options)
             logCaller("Initialized workspace %d wth %s" % (workspace.num, managers[workspace.num].shortName))
+    if workspace.num not in workspaceWindows:
+        workspaceWindows[workspace.num] = []
 
 
 def findFocusedWorkspace(con):
@@ -211,6 +246,7 @@ def main():
         con.on(Event.WORKSPACE, onWorkspace)
         for workspace in con.get_workspaces():
             setWorkspaceLayoutManager(con, workspace)
+            workspaceWindows[workspace.num] = []
 
     try:
         con.main()

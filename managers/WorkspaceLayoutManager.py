@@ -18,9 +18,13 @@ swlm. If not, see <https://www.gnu.org/licenses/>.
 import inspect
 
 class WorkspaceLayoutManager:
+    # These properties should be overriden to configure your WLM as
+    # Needed
     shortName = "none"
     overridesMoveBinds = False
 
+    # These are the functions you should override for to implement a
+    # WLM. 
     def __init__(self, con, workspace, options):
         self.con = con
         self.workspaceId = workspace.ipc_data["id"]
@@ -28,22 +32,30 @@ class WorkspaceLayoutManager:
         self.debug = options.debug
 
 
-    def windowCreated(self, event):
+    # windowAdded is called when a new window is added to the workpsace,
+    # either by being created on the workspace or moved to it from another.
+    def windowAdded(self, event):
         pass
 
 
+    # windowRemoved is called when a window is removed from the workspace,
+    # either by being closed or moved to a different workspace.
+    def windowRemoved(self, event):
+        pass
+
+
+    # windowFocused is called when a window on the workpsace is focused
     def windowFocused(self, event):
         pass
 
 
-    def windowClosed(self, event):
-        pass
-
-
+    # windowMoved is called when a window is moved, but stays on the same
+    # workspace.
     def windowMoved(self, event):
         pass
 
-
+    # onBinding is called when a key binding is pressed while the workspace
+    # is focused.
     def onBinding(self, command):
         pass
 
@@ -61,5 +73,4 @@ class WorkspaceLayoutManager:
     # functions that get called by event handlers
     def logCaller(self, msg):
         if self.debug:
-
             print(("%s %d: %s: %s" % (self.shortName, self.workspaceNum, inspect.stack()[2][3], msg)))
