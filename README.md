@@ -31,15 +31,15 @@ Options:
   - [ ] Configuration file with more per-workspace options 
   - [ ] Load custom WorkspaceLayoutManagers from config path
   - [ ] Reload config without restarting swlm
-- [ ] Replace "windowClosed?" in WLMs with "windowRemoved", call it when a window closes OR moves to a different workspace
 - [ ] Differentiate WLMs that support managing existing windows
   - [ ] Add warning (swaynag?) when enabling WLMs that don't support existing windows on a workspace with windows
 - [ ] More Layouts!
 - [ ] MasterStack:
   - [ ] Maintain user-set window sizes for each wndow position
-  - [ ] Handle windows moved out of layout
   - [ ] Automatically arrange pre-existing windows into correct layout
+  - [x] ~Handle windows moved out of layout~
 - [ ] idk im probably forgetting a lot
+- [x] ~Replace "windowClosed?" in WLMs with "windowRemoved", call it when a window closes OR moves to a different workspace~
 - [X] ~Differentiate WLMs that support window movement~
   - [X] ~Add wrappers for window movement. Defaults would be used for WLMs that support movement, but WLMs that don't can override with better defaults (ex for MasterStack: replace up/down with move up/down in stack, left/right with rotation)~
 
