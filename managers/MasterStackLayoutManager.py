@@ -43,12 +43,12 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return
         
         # New window replaces master, master gets pushed to stack
-        self.log("New window id: %d" % newWindow.id)
+        self.log("Added window id: %d" % newWindow.id)
         self.pushWindow(newWindow.id)
 
 
     def windowRemoved(self, event):
-        self.log("Closed window id: %d" % event.container.id)
+        self.log("Removed window id: %d" % event.container.id)
         self.removeWindow(event.container.id)
 
 
@@ -59,11 +59,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return
 
         self.setStackLayout()
-
-        # Handle window if it's not currently being tracked
-        if self.masterId != focusedWindow.id and focusedWindow.id not in self.stackIds:
-            # TODO: Handle arranging existing layout. Just treat like a single untracked window for now
-            return
 
 
     def onBinding(self, command):
