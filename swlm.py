@@ -75,26 +75,31 @@ def windowFocused(con, event):
 
 
 def windowClosed(con, event):
-    # Check if we should pass this call to a manager
-    workspace = findFocusedWorkspace(con)
-    if isExcluded(workspace):
-        log("Workspace or output excluded")
-        return
+    # Try to find workspace num by locating where the window is recorded
+    workspaceNum = None
+    for num in workspaceWindows:
+        if event.container.id in workspaceWindows[num]:
+            workspaceNum = num
+            break
+
+    # Fallback to focused workspace if the window wasn't tracked
+    if workspaceNum is None:
+        workspaceNum = findFocusedWorkspace(con).num
 
     # Check if we have a manager
-    if workspace.num not in managers:
-        log("No manager for workpsace %d, ignoring" % workspace.num)
+    if workspaceNum not in managers:
+        log("No manager for workpsace %d, ignoring" % workspaceNum)
         return
 
     # Remove window
     try:
-        workspaceWindows[workspace.num].remove(event.container.id)
+        workspaceWindows[workspaceNum].remove(event.container.id)
     except BaseException as e:
-        log("Untracked window %d closed on %d" % (event.container.id, workspace.num))
+        log("Untracked window %d closed on %d" % (event.container.id, workspaceNum))
 
     # Pass command to the appropriate manager
-    log("Calling manager for workspace %d" % workspace.num)
-    managers[workspace.num].windowRemoved(event)
+    log("Calling manager for workspace %d" % workspaceNum)
+    managers[workspaceNum].windowRemoved(event)
 
 
 def windowMoved(con, event):
@@ -111,19 +116,19 @@ def windowMoved(con, event):
         return
 
     # Check if the window has moved workspaces
-    if event.container.id not in workspaceWindows[workspace.num]:
+    if window.id not in workspaceWindows[workspace.num]:
         log("Window untracked, or changed workspaces")
         # Find the window's old workspace
         for workspaceNum in managers:
-            if event.container.id in workspaceWindows[workspaceNum]:
+            if window.id in workspaceWindows[workspaceNum]:
                 # Call windowRemoved on old workspace
                 log("Calling windowRemoved for workspace %d" % workspaceNum)
-                workspaceWindows[workspaceNum].remove(event.container.id)
+                workspaceWindows[workspaceNum].remove(window.id)
                 managers[workspaceNum].windowRemoved(event)
 
         # Call windowAdded on new workspace
         log("Calling windowAdded for workspace %d" % workspace.num)
-        workspaceWindows[workspace.num].append(event.container.id)
+        workspaceWindows[workspace.num].append(window.id)
         managers[workspace.num].windowAdded(event)
         return
 
