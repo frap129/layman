@@ -111,21 +111,21 @@ def windowMoved(con, event):
         return
 
     # Check if the window has moved workspaces
-    if window.id not in workspaceWindows[workspace.num]:
+    if event.container.id not in workspaceWindows[workspace.num]:
         log("Window untracked, or changed workspaces")
-        # Find the windows old workspace
+        # Find the window's old workspace
         for workspaceNum in managers:
-            if window.id in workspaceWindows[workspaceNum]:
+            if event.container.id in workspaceWindows[workspaceNum]:
                 # Call windowRemoved on old workspace
                 log("Calling windowRemoved for workspace %d" % workspaceNum)
-                workspaceWindows[workspaceNum].remove(window.id)
+                workspaceWindows[workspaceNum].remove(event.container.id)
                 managers[workspaceNum].windowRemoved(event)
 
-                # Call windowAdded on new workspace
-                log("Calling windowAdded for workspace %d" % workspace.num)
-                workspaceWindows[workspace.num].append(window.id)
-                managers[workspace.num].windowAdded(event)
-                return
+        # Call windowAdded on new workspace
+        log("Calling windowAdded for workspace %d" % workspace.num)
+        workspaceWindows[workspace.num].append(event.container.id)
+        managers[workspace.num].windowAdded(event)
+        return
 
     # Window has moved within a workspace, call windowMoved
     log("Calling windowMoved for workspace %d" % workspace.num)
