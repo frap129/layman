@@ -48,8 +48,18 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def windowRemoved(self, event):
+        if self.masterId == event.container.id:
+            # If window is master, pop the next one off the stack
+            self.popWindow()
+        else:
+            # If window is not master, remove from stack and exist
+            try:
+                self.stackIds.remove(event.container.id)
+            except BaseException as e:
+                # This should only happen if an untracked window was closed
+                self.log("WTF: window not master or in stack")
+
         self.log("Removed window id: %d" % event.container.id)
-        self.removeWindow(event.container.id)
 
 
     def windowFocused(self, event):
@@ -195,20 +205,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.setStackLayout()
 
         self.log("masterId is %d" % self.masterId)
-
-
-    def removeWindow(self, windowId):
-        if self.masterId == windowId:
-            # If window is master, pop the next one off the stack
-            self.popWindow()
-        else:
-            # If window is not master, remove from stack and exist
-            try:
-                self.stackIds.remove(windowId)
-            except BaseException as e:
-                # This should only happen if an untracked window was closed
-                self.log("WTF: window not master or in stack")
-
 
     def moveUp(self):
         focusedWindow = utils.findFocused(self.con)
