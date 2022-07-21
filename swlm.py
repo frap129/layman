@@ -60,7 +60,7 @@ class SWLM:
             self.workspaceWindows[self.focusedWorkspace.num].append(self.focusedWindow.id)
 
         # Pass event to the layout manager
-        self.log("Calling manager for workspace %d" % self.focusedWorkspace.num)
+        self.log("Calling windowAdded for workspace %d" % self.focusedWorkspace.num)
         self.managers[self.focusedWorkspace.num].windowAdded(event, self.focusedWindow)
 
 
@@ -97,7 +97,7 @@ class SWLM:
             self.log("Untracked window %d closed on %d" % (event.container.id, workspaceNum))
 
         # Pass command to the appropriate manager
-        self.log("Calling manager for workspace %d" % workspaceNum)
+        self.log("Calling windowRemoved for workspace %d" % workspaceNum)
         self.managers[workspaceNum].windowRemoved(event, self.focusedWindow)
 
 
