@@ -34,29 +34,29 @@ class WorkspaceLayoutManager:
 
     # windowAdded is called when a new window is added to the workpsace,
     # either by being created on the workspace or moved to it from another.
-    def windowAdded(self, event):
+    def windowAdded(self, event, window):
         pass
 
 
     # windowRemoved is called when a window is removed from the workspace,
     # either by being closed or moved to a different workspace.
-    def windowRemoved(self, event):
+    def windowRemoved(self, event, window):
         pass
 
 
     # windowFocused is called when a window on the workpsace is focused
-    def windowFocused(self, event):
+    def windowFocused(self, event, window):
         pass
 
 
     # windowMoved is called when a window is moved, but stays on the same
     # workspace.
-    def windowMoved(self, event):
+    def windowMoved(self, event, window):
         pass
 
     # onBinding is called when a key binding is pressed while the workspace
     # is focused.
-    def onBinding(self, command):
+    def onBinding(self, command, window):
         pass
 
 
