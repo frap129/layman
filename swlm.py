@@ -34,44 +34,46 @@ class WorkspaceLayoutManagerDict(dict):
 options = utils.getUserOptions()
 managers = WorkspaceLayoutManagerDict()
 workspaceWindows = WorkspaceLayoutManagerDict()
+focusedWindow = None;
+focusedWorkspace = None;
 
 
 def windowCreated(con, event):
+    focusedWindow = utils.findFocused(con)
+    focusedWorkspace = findFocusedWorkspace(con)
+
     # Check if we should pass this call to a manager
-    workspace = findFocusedWorkspace(con)
-    if isExcluded(workspace):
+    if isExcluded(focusedWorkspace):
         log("Workspace or output excluded")
         return
 
     # Check if we have a layoutmanager
-    if workspace.num not in managers:
-        log("No manager for workpsace %d, ignoring" % workspace.num)
-        return
+    if focusedWorkspace.num not in managers:
+        log("No manager for workpsace %d, ignoring" % focusedWorkspace.num)
+        setWorkspaceLayoutManager(con, focusedWorkspace)
 
     # Store window
-    window = utils.findFocused(con)
-    if window is not None:
-        workspaceWindows[workspace.num].append(window.id)
+    focusedWindow = utils.findFocused(con)
+    if focusedWindow is not None:
+        workspaceWindows[focusedWorkspace.num].append(focusedWindow.id)
 
     # Pass event to the layout manager
-    log("Calling manager for workspace %d" % workspace.num)
-    managers[workspace.num].windowAdded(event)
+    log("Calling manager for workspace %d" % focusedWorkspace.num)
+    managers[focusedWorkspace.num].windowAdded(event)
 
 
 def windowFocused(con, event):
+    focusedWorkspace = findFocusedWorkspace(con)
+    focusedWindow = utils.findFocused(con)
+
     # Check if we should pass this call to a manager
-    workspace = findFocusedWorkspace(con)
-    if isExcluded(workspace):
+    if isExcluded(focusedWorkspace):
         log("Workspace or output excluded")
         return
 
     # Pass command to the appropriate manager
-    if workspace.num not in managers:
-        log("No manager for workpsace %d, ignoring" % workspace.num)
-        return
-
     # log("windowFocused: Calling manager for workspace %d" % workspace.num)
-    managers[workspace.num].windowFocused(event)
+    managers[focusedWorkspace.num].windowFocused(event)
 
 
 def windowClosed(con, event):
@@ -86,11 +88,6 @@ def windowClosed(con, event):
     if workspaceNum is None:
         workspaceNum = findFocusedWorkspace(con).num
 
-    # Check if we have a manager
-    if workspaceNum not in managers:
-        log("No manager for workpsace %d, ignoring" % workspaceNum)
-        return
-
     # Remove window
     try:
         workspaceWindows[workspaceNum].remove(event.container.id)
@@ -103,38 +100,28 @@ def windowClosed(con, event):
 
 
 def windowMoved(con, event):
-    # Check if we should pass this call to a manager
     window = utils.findFocused(con)
     workspace = window.workspace()
-    if isExcluded(workspace):
-        log("Workspace or output excluded")
-        return
 
-    # Ensure the workspace is being managed first
-    if workspace.num not in managers:
-        log("No manager for workpsace %d, ignoring" % workspace.num)
-        return
+    # Check if window has moved workspaces
+    if window.id == focusedWindow.id:
+        if workspace.num == focusedWorkspace.num:
+            # Window has moved within a workspace, call windowMoved
+            if not isExcluded(workspace):
+                log("Calling windowMoved for workspace %d" % workspace.num)
+                managers[workspace.num].windowMoved(event)
+        else
+            # Call windowRemoved on old workspace
+            if not isExcluded(focusedWorkspace):
+                log("Calling windowRemoved for workspace %d" % focusedWorkspace.num)
+                workspaceWindows[focusedWorkspace.num].remove(window.id)
+                managers[focusedWorkspace.num].windowRemoved(event)
 
-    # Check if the window has moved workspaces
-    if window.id not in workspaceWindows[workspace.num]:
-        log("Window untracked, or changed workspaces")
-        # Find the window's old workspace
-        for workspaceNum in managers:
-            if window.id in workspaceWindows[workspaceNum]:
-                # Call windowRemoved on old workspace
-                log("Calling windowRemoved for workspace %d" % workspaceNum)
-                workspaceWindows[workspaceNum].remove(window.id)
-                managers[workspaceNum].windowRemoved(event)
-
-        # Call windowAdded on new workspace
-        log("Calling windowAdded for workspace %d" % workspace.num)
-        workspaceWindows[workspace.num].append(window.id)
-        managers[workspace.num].windowAdded(event)
-        return
-
-    # Window has moved within a workspace, call windowMoved
-    log("Calling windowMoved for workspace %d" % workspace.num)
-    managers[workspace.num].windowMoved(event)
+            if not isExcluded(workspace):
+                # Call windowAdded on new workspace
+                log("Calling windowAdded for workspace %d" % workspace.num)
+                workspaceWindows[workspace.num].append(window.id)
+                managers[workspace.num].windowAdded(event)
 
 
 def onBinding(con, event):
@@ -184,11 +171,10 @@ def onBinding(con, event):
     managers[workspace.num].onBinding(command)
 
 
-def onWorkspace(con, event):
-    workspace = findFocusedWorkspace(con)
+def workspaceInit(con, event):
+    focusedWorkspace = findFocusedWorkspace(con)
     setWorkspaceLayoutManager(con, workspace)
-
-
+    
 def setWorkspaceLayoutManager(con, workspace):
     if workspace.num not in managers:
         if options.default == AutotilingLayoutManager.shortName:
@@ -237,18 +223,20 @@ def isExcluded(workspace):
 def main():
     setproctitle("swlm")
 
-    # Get connection to sway
+    # Get connection to swayipc
     con = Connection()
+
+    # Set event callbacks
+    con.on(Event.BINDING, onBinding)
     con.on(Event.WINDOW_FOCUS, windowFocused)
     con.on(Event.WINDOW_NEW, windowCreated)
     con.on(Event.WINDOW_CLOSE, windowClosed)
     con.on(Event.WINDOW_MOVE, windowMoved)
-    con.on(Event.BINDING, onBinding)
+    con.on(Event.WORKSPACE_INIT, workspaceInit)
     log("swlm started")
 
     # Set default layout maangers
     if options.default and options.default != "none":
-        con.on(Event.WORKSPACE, onWorkspace)
         for workspace in con.get_workspaces():
             setWorkspaceLayoutManager(con, workspace)
             workspaceWindows[workspace.num] = []
