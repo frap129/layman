@@ -59,7 +59,7 @@ def windowCreated(con, event):
 
     # Pass event to the layout manager
     log("Calling manager for workspace %d" % focusedWorkspace.num)
-    managers[focusedWorkspace.num].windowAdded(event)
+    managers[focusedWorkspace.num].windowAdded(event, focusedWindow)
 
 
 def windowFocused(con, event):
@@ -73,7 +73,7 @@ def windowFocused(con, event):
 
     # Pass command to the appropriate manager
     # log("windowFocused: Calling manager for workspace %d" % workspace.num)
-    managers[focusedWorkspace.num].windowFocused(event)
+    managers[focusedWorkspace.num].windowFocused(event, focusedWindow)
 
 
 def windowClosed(con, event):
@@ -96,7 +96,7 @@ def windowClosed(con, event):
 
     # Pass command to the appropriate manager
     log("Calling manager for workspace %d" % workspaceNum)
-    managers[workspaceNum].windowRemoved(event)
+    managers[workspaceNum].windowRemoved(event, focusedWindow)
 
 
 def windowMoved(con, event):
@@ -109,19 +109,19 @@ def windowMoved(con, event):
             # Window has moved within a workspace, call windowMoved
             if not isExcluded(workspace):
                 log("Calling windowMoved for workspace %d" % workspace.num)
-                managers[workspace.num].windowMoved(event)
-        else
+                managers[workspace.num].windowMoved(event, focusedWindow)
+        else:
             # Call windowRemoved on old workspace
             if not isExcluded(focusedWorkspace):
                 log("Calling windowRemoved for workspace %d" % focusedWorkspace.num)
                 workspaceWindows[focusedWorkspace.num].remove(window.id)
-                managers[focusedWorkspace.num].windowRemoved(event)
+                managers[focusedWorkspace.num].windowRemoved(event, focusedWindow)
 
             if not isExcluded(workspace):
                 # Call windowAdded on new workspace
                 log("Calling windowAdded for workspace %d" % workspace.num)
                 workspaceWindows[workspace.num].append(window.id)
-                managers[workspace.num].windowAdded(event)
+                managers[workspace.num].windowAdded(event, focusedWindow)
 
 
 def onBinding(con, event):

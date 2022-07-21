@@ -35,19 +35,17 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackLayout = options.stackLayout
 
 
-    def windowAdded(self, event):
-        newWindow = utils.findFocused(self.con)
-
+    def windowAdded(self, event, window):
         # Ignore excluded windows
-        if self.isExcluded(newWindow):
+        if self.isExcluded(window):
             return
         
         # New window replaces master, master gets pushed to stack
-        self.log("Added window id: %d" % newWindow.id)
-        self.pushWindow(newWindow.id)
+        self.log("Added window id: %d" % window.id)
+        self.pushWindow(window.id)
 
 
-    def windowRemoved(self, event):
+    def windowRemoved(self, event, window):
         if self.masterId == event.container.id:
             # If window is master, pop the next one off the stack
             self.popWindow()
@@ -62,10 +60,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("Removed window id: %d" % event.container.id)
 
 
-    def windowFocused(self, event):
-        focusedWindow = utils.findFocused(self.con)
+    def windowFocused(self, event, window):
         # Ignore excluded windows
-        if self.isExcluded(focusedWindow):
+        if self.isExcluded(window):
             return
 
         self.setStackLayout()
