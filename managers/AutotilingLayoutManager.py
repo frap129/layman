@@ -53,13 +53,12 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
 
         return False
 
-    def switchSplit(self):
-        focusedWindow = utils.findFocused(self.con)
-        if self.isExcluded(focusedWindow):
+    def switchSplit(self, window):
+        if self.isExcluded(window):
             return
 
-        newLayout = "splitv" if focusedWindow.rect.height > focusedWindow.rect.width else "splith"
-        if newLayout != focusedWindow.parent.layout:
+        newLayout = "splitv" if window.rect.height > window.rect.width else "splith"
+        if newLayout != window.parent.layout:
             result = self.con.command(newLayout)
             if result[0].success:
                 self.log("Switched to %s" % newLayout)
@@ -67,17 +66,17 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
                 self.log("Error: Switch failed with err {}".format(result[0].error))
 
 
-    def windowAdded(self, event):
-        self.switchSplit()
+    def windowAdded(self, event, window):
+        self.switchSplit(window)
 
 
-    def windowRemoved(self, event):
-        self.switchSplit()
+    def windowRemoved(self, event, window):
+        self.switchSplit(window)
 
 
-    def windowFocused(self, event):
-        self.switchSplit()
+    def windowFocused(self, event, window):
+        self.switchSplit(window)
 
 
-    def windowMoved(self, event):
-        self.switchSplit()
+    def windowMoved(self, event, window):
+        self.switchSplit(window)
