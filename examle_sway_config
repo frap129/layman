@@ -1,0 +1,15 @@
+# Start swlm
+exec ~/software/swlm/swlm.py -w 70
+
+# Toggle layout managers
+bindsym $mod+k nop swlm layout Autotiling
+bindsym $mod+m nop swlm layout MasterStack
+
+# Swap with master window
+bindsym $mod+s nop swlm swap master
+
+# Override move binds
+bindsym $mod+Shift+Left nop swlm move left
+bindsym $mod+Shift+Down nop swlm move down
+bindsym $mod+Shift+Up nop swlm move up
+bindsym $mod+Shift+Right nop swlm move right
