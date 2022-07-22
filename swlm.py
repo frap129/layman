@@ -65,8 +65,8 @@ class SWLM:
 
 
     def windowFocused(self, con, event):
-        #self.focusedWorkspace = self.findFocusedWorkspace(con)
-        #self.focusedWindow = utils.findFocused(con)
+        self.focusedWorkspace = self.findFocusedWorkspace(con)
+        self.focusedWindow = utils.findFocused(con)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(self.focusedWorkspace):
@@ -105,25 +105,29 @@ class SWLM:
         window = utils.findFocused(con)
         workspace = window.workspace()
 
-        # Check if window has moved workspaces
-        if window.id == self.focusedWindow.id:
+        if window.id in self.workspaceWindows[self.focusedWorkspace.num]:
+            # Check if window has changed workspaces
             if workspace.num == self.focusedWorkspace.num:
-                # Window has moved within a workspace, call windowMoved
+                # Window moved within the same workspace, call windowMoved
                 if not self.isExcluded(workspace):
-                    self.log("Calling windowMoved for workspace %d" % workspace.num)
-                    self.managers[workspace.num].windowMoved(event, self.focusedWindow)
+                   self.log("Calling windowMoved for workspace %d" % workspace.num)
+                   self.managers[workspace.num].windowMoved(event, window)
             else:
                 # Call windowRemoved on old workspace
                 if not self.isExcluded(self.focusedWorkspace):
                     self.log("Calling windowRemoved for workspace %d" % self.focusedWorkspace.num)
                     self.workspaceWindows[self.focusedWorkspace.num].remove(window.id)
-                    self.managers[self.focusedWorkspace.num].windowRemoved(event, self.focusedWindow)
+                    self.managers[self.focusedWorkspace.num].windowRemoved(event, window)
 
-                if not self.isExcluded(workspace):
-                    # Call windowAdded on new workspace
-                    self.log("Calling windowAdded for workspace %d" % workspace.num)
-                    self.workspaceWindows[workspace.num].append(window.id)
-                    self.managers[workspace.num].windowAdded(event, self.focusedWindow)
+        if window.id not in self.workspaceWindows[workspace.num]:
+            # Call windowAdded on new workspace
+            if not self.isExcluded(workspace):
+                self.log("Calling windowAdded for workspace %d" % workspace.num)
+                self.workspaceWindows[workspace.num].append(window.id)
+                self.managers[workspace.num].windowAdded(event, window)
+
+        self.focusedWindow = window
+        self.focusedWorkspace = workspace
 
 
     def onBinding(self, con, event):
@@ -176,7 +180,8 @@ class SWLM:
     def workspaceInit(self, con, event):
         self.focusedWorkspace = self.findFocusedWorkspace(con)
         self.setWorkspaceLayoutManager(con, self.focusedWorkspace)
-        
+
+
     def setWorkspaceLayoutManager(self, con, workspace):
         if workspace.num not in self.managers:
             if self.options.default == AutotilingLayoutManager.shortName:
