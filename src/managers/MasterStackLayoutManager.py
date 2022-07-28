@@ -204,7 +204,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("masterId is %d" % self.masterId)
 
     def moveUp(self):
-        focusedWindow = utils.findFocused(self.con)
+        focusedWindow = utils.findFocusedWindow(self.con)
 
         if focusedWindow is None:
             self.log("No window focused, can't move")
@@ -234,7 +234,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if len(self.stackIds) < 2:
             return
 
-        focusedWindow = utils.findFocused(self.con)
+        focusedWindow = utils.findFocusedWindow(self.con)
         if focusedWindow is None:
             self.log("No window focused, can't move")
             return
@@ -311,7 +311,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("Stack emtpy, can't swap")
             return
             
-        focusedWindow = utils.findFocused(self.con)
+        focusedWindow = utils.findFocusedWindow(self.con)
 
         if focusedWindow is None:
             self.log("No window focused, can't swap")

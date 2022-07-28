@@ -63,7 +63,7 @@ class SWLM:
 
 
     def windowCreated(self, event):
-        self.focusedWorkspace = self.findFocusedWorkspace(self.con)
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(self.focusedWorkspace):
@@ -76,7 +76,7 @@ class SWLM:
             self.setWorkspaceLayoutManager(self.focusedWorkspace)
 
         # Store window
-        self.focusedWindow = utils.findFocused(self.con)
+        self.focusedWindow = utils.findFocusedWindow(self.con)
         if self.focusedWindow is not None:
             self.workspaceWindows[self.focusedWorkspace.num].append(self.focusedWindow.id)
 
@@ -86,8 +86,8 @@ class SWLM:
 
 
     def windowFocused(self, event):
-        self.focusedWorkspace = self.findFocusedWorkspace(self.con)
-        self.focusedWindow = utils.findFocused(self.con)
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
+        self.focusedWindow = utils.findFocusedWindow(self.con)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(self.focusedWorkspace):
@@ -109,7 +109,7 @@ class SWLM:
 
         # Fallback to focused workspace if the window wasn't tracked
         if workspaceNum is None:
-            workspaceNum = self.findFocusedWorkspace(self.con).num
+            workspaceNum = utils.findFocusedWorkspace(self.con).num
 
         # Remove window
         try:
@@ -123,7 +123,7 @@ class SWLM:
 
 
     def windowMoved(self, event):
-        window = utils.findFocused(self.con)
+        window = utils.findFocusedWindow(self.con)
         workspace = window.workspace()
 
         if window.id in self.workspaceWindows[self.focusedWorkspace.num]:
@@ -152,7 +152,7 @@ class SWLM:
 
 
     def workspaceInit(self, event):
-        self.focusedWorkspace = self.findFocusedWorkspace(self.con)
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
         self.setWorkspaceLayoutManager(self.focusedWorkspace)
 
     def onBinding(self, event):
@@ -162,7 +162,7 @@ class SWLM:
             return
             
         # Check if we should pass this call to a manager
-        workspace = self.findFocusedWorkspace(self.con)
+        workspace = utils.findFocusedWorkspace(self.con)
         if self.isExcluded(workspace):
             self.log("Workspace or output excluded")
             return
@@ -236,16 +236,6 @@ class SWLM:
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
         if workspace.num not in self.workspaceWindows:
             self.workspaceWindows[workspace.num] = []
-
-
-    def findFocusedWorkspace(self, con):
-        workspace = None
-        for workspace in con.get_workspaces():
-            if workspace.focused:
-                workspace = workspace
-                break
-
-        return workspace
 
 
     def log(self, msg):

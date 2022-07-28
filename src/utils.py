@@ -23,12 +23,22 @@ def getCommaSeparatedArgs(option, opt, value, parser):
     setattr(parser.values, option.dest, value.split(","))
 
 
-def findFocused(con):
+def findFocusedWindow(con):
     tree = con.get_tree()
     focusedWindow = tree.find_focused()
     return focusedWindow
 
 
+def findFocusedWorkspace(con):
+    focused = None
+    for workspace in con.get_workspaces():
+        if workspace.focused:
+            focused = workspace
+            break
+
+    return focused
+
+        
 def getUserOptions():
     parser = OptionParser()
     parser.add_option("--default",
