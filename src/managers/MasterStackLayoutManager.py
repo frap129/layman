@@ -88,10 +88,15 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if window.type != "con":
             return True
 
-        if window.workspace() is None:
+        workspace = window.workspace()
+
+        if workspace is None:
             return True
 
         if window.floating is not None and "on" in window.floating:
+            return True
+
+        if workspace.floating_nodes is not None and any(node.id == window.id for node in workspace.floating_nodes):
             return True
 
         return False
