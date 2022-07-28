@@ -54,6 +54,7 @@ class WorkspaceLayoutManager:
     def windowMoved(self, event, window):
         pass
 
+
     # onBinding is called when a key binding is pressed while the workspace
     # is focused.
     def onBinding(self, command, window):

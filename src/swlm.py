@@ -158,6 +158,35 @@ class SWLM:
         self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
         self.setWorkspaceLayoutManager(self.focusedWorkspace)
 
+
+    def windowFloating(self, event):
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
+        self.focusedWindow = utils.findFocusedWindow(self.con)
+
+        # Check if we should pass this call to a manager
+        if self.isExcluded(self.focusedWorkspace):
+            self.log("Workspace or output excluded")
+            return
+
+        # Determine if window is floating
+        i3Floating = self.focusedWindow.floating is not None and "on" in self.focusedWindow.floating
+        swayFloating = any(self.focusedWindow.id == node.id for node in self.focusedWindow.workspace().floating_nodes)
+
+        if swayFloating or i3Floating:
+            # Window floating, treat like its closed
+            self.log("Calling windowRemoved for workspace %d" % self.focusedWorkspace.num)
+            try:
+                self.workspaceWindows[self.focusedWorkspace.num].remove(self.focusedWindow.id)
+            except ValueError as e:
+                self.log("Wiondow not tracked in workspace")
+            self.managers[self.focusedWorkspace.num].windowRemoved(event, self.focusedWindow)
+        else:
+            # Window is not floating, treat like a new window
+            self.log("Calling windowAdded for workspace %d" % self.focusedWorkspace.num)
+            self.workspaceWindows[self.focusedWorkspace.num].append(self.focusedWindow.id)
+            self.managers[self.focusedWorkspace.num].windowAdded(event, self.focusedWindow)
+
+
     def onBinding(self, event):
         # Exit early if binding isnt for slwm
         command = event.ipc_data["binding"]["command"].strip()
@@ -220,17 +249,21 @@ class SWLM:
                 self.windowFocused(event)
             elif event.change == "move":
                 self.windowMoved(event)
+            elif event.change == "floating":
+                self.windowFloating(event)
             elif event.change == "close":
                 self.windowClosed(event)
 
 
     def onEvent(self, con, event):
         # Set item priority
-        prioritized = (4, event)
+        prioritized = (3, event)
         if type(event) == WorkspaceEvent and event.change == "init":
             prioritized = (1, event)
         elif type(event) == BindingEvent:
             prioritized = (2, event)
+        elif type(event) == WindowEvent and event.change == "move":
+            prioritized = (4, event)
 
         self.con = con
         self.eventQueue.put(prioritized)
@@ -278,6 +311,7 @@ class SWLM:
         self.con.on(Event.WINDOW_NEW, self.onEvent)
         self.con.on(Event.WINDOW_CLOSE, self.onEvent)
         self.con.on(Event.WINDOW_MOVE, self.onEvent)
+        self.con.on(Event.WINDOW_FLOATING, self.onEvent)
         self.con.on(Event.WORKSPACE_INIT, self.onEvent)
 
         # Register event queue listener
