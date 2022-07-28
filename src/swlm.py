@@ -35,13 +35,16 @@ class WorkspaceLayoutManagerDict(dict):
         return None
 
 
-class NotifyingList(list):
+class EventQueue(queue.PriorityQueue):
     def __init__(self, maxsize=0):
-        super().__init__()
+        super().__init__(maxsize=0)
         self.on_change_listeners = []
 
-    def append(self, item):
-        super().append(item)
+    def _put(self, event):
+        # Add to queue
+        super()._put(event)
+
+        # Run any listeners
         for listener in self.on_change_listeners:
             thread = threading.Thread(target=listener)
             thread.start()
@@ -57,7 +60,7 @@ class SWLM:
         self.workspaceWindows = WorkspaceLayoutManagerDict()
         self.focusedWindow = None
         self.focusedWorkspace = None
-        self.eventQueue = NotifyingList()
+        self.eventQueue = EventQueue()
         self.con = Connection()
         setproctitle("swlm")
 
@@ -203,7 +206,7 @@ class SWLM:
 
 
     def onEventAddedToQueue(self):
-        event = self.eventQueue.pop()
+        event = self.eventQueue.get()[1]
 
         if type(event) == BindingEvent:
             self.onBinding(event)
@@ -222,8 +225,15 @@ class SWLM:
 
 
     def onEvent(self, con, event):
+        # Set item priority
+        prioritized = (4, event)
+        if type(event) == WorkspaceEvent and event.change == "init":
+            prioritized = (1, event)
+        elif type(event) == BindingEvent:
+            prioritized = (2, event)
+
         self.con = con
-        self.eventQueue.append(event)
+        self.eventQueue.put(prioritized)
 
 
     def setWorkspaceLayoutManager(self, workspace):
