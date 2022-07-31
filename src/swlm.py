@@ -40,6 +40,7 @@ class EventQueue(queue.PriorityQueue):
         super().__init__(maxsize=0)
         self.on_change_listeners = []
 
+
     def _put(self, event):
         # Add to queue
         super()._put(event)
@@ -48,6 +49,7 @@ class EventQueue(queue.PriorityQueue):
         for listener in self.on_change_listeners:
             thread = threading.Thread(target=listener)
             thread.start()
+
 
     def registerListener(self, listener):
         self.on_change_listeners.append(listener)
@@ -154,11 +156,6 @@ class SWLM:
         self.focusedWorkspace = workspace
 
 
-    def workspaceInit(self, event):
-        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
-        self.setWorkspaceLayoutManager(self.focusedWorkspace)
-
-
     def windowFloating(self, event):
         self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
         self.focusedWindow = utils.findFocusedWindow(self.con)
@@ -185,6 +182,40 @@ class SWLM:
             self.log("Calling windowAdded for workspace %d" % self.focusedWorkspace.num)
             self.workspaceWindows[self.focusedWorkspace.num].append(self.focusedWindow.id)
             self.managers[self.focusedWorkspace.num].windowAdded(event, self.focusedWindow)
+
+
+    def workspaceInit(self, event):
+        self.focusedWorkspace = event.current
+        self.setWorkspaceLayoutManager(self.focusedWorkspace)
+
+
+    def workspaceFocused(self, event):
+        # Exit early if we're on the same workspace
+        if event.old == None or event.current.num == event.old.num:
+            return
+
+        window = utils.findFocusedWindow(self.con)
+        if window.id != self.focusedWindow.id:
+            #  Exit early if all we did was focus a new window
+            self.focusedWindow = window
+            self.focusedWorkspace = event.current
+            return
+
+        # Window has changed workspaces, check if it needs to be reported
+        if window.id in self.workspaceWindows[self.focusedWorkspace.num] and not self.isExcluded(self.focusedWorkspace):
+            # Window is still tracked on old workspace, remove and call windowRemoved on its manager
+            self.log("Calling windowRemoved for workspace %d" % self.focusedWorkspace.num)
+            self.workspaceWindows[self.focusedWorkspace.num].remove(window.id)
+            self.managers[self.focusedWorkspace.num].windowRemoved(event, window)
+                    
+        if window.id not in self.workspaceWindows[event.current.num] and not self.isExcluded(event.current):
+            # Window is not tracked on new workspace, add and call windowAdded on its manager
+            self.log("Calling windowAdded for workspace %d" % event.current.num)
+            self.workspaceWindows[event.current.num].append(window.id)
+            self.managers[event.current.num].windowAdded(event, window)
+
+        self.focusedWindow = window
+        self.focusedWorkspace = event.current
 
 
     def onBinding(self, event):
@@ -236,12 +267,13 @@ class SWLM:
 
     def onEventAddedToQueue(self):
         event = self.eventQueue.get()[1]
-
         if type(event) == BindingEvent:
             self.onBinding(event)
         if type(event) == WorkspaceEvent:
             if event.change == "init":
                 self.workspaceInit(event)
+            elif event.change == "focus":
+                self.workspaceFocused(event)
         elif type(event) == WindowEvent:
             if event.change == "new":
                 self.windowCreated(event)
@@ -259,6 +291,8 @@ class SWLM:
         # Set item priority
         prioritized = (3, event)
         if type(event) == WorkspaceEvent and event.change == "init":
+            prioritized = (0, event)
+        elif type(event) == WorkspaceEvent and event.change == "focus":
             prioritized = (1, event)
         elif type(event) == BindingEvent:
             prioritized = (2, event)
@@ -313,6 +347,7 @@ class SWLM:
         self.con.on(Event.WINDOW_MOVE, self.onEvent)
         self.con.on(Event.WINDOW_FLOATING, self.onEvent)
         self.con.on(Event.WORKSPACE_INIT, self.onEvent)
+        self.con.on(Event.WORKSPACE_FOCUS, self.onEvent)
 
         # Register event queue listener
         self.eventQueue.registerListener(self.onEventAddedToQueue)
