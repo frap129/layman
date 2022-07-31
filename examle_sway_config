@@ -1,5 +1,5 @@
 # Start swlm
-exec ~/software/swlm/swlm.py -w 70
+exec ~/software/swlm/src/swlm.py -w 70
 
 # Toggle layout managers
 bindsym $mod+k nop swlm layout Autotiling
