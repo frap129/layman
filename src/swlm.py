@@ -307,6 +307,8 @@ class SWLM:
         elif type(event) == WindowEvent and event.change == "move":
             prioritized = (4, event)
 
+        self.eventQueue.put(prioritized)
+
 
     def onEventAddedToQueue(self):
         event = self.eventQueue.get()[1]
@@ -328,8 +330,6 @@ class SWLM:
                 self.windowFloating(event)
             elif event.change == "close":
                 self.windowClosed(event)
-
-        self.eventQueue.put(prioritized)
 
 
     """
