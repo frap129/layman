@@ -34,6 +34,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.masterWidth = options.masterWidth
         self.stackLayout = options.stackLayout
 
+        # Handle window if it's not currently being tracked
+        self.arrangeExistingLayout()
+
 
     def windowAdded(self, event, window):
         # Ignore excluded windows
@@ -180,33 +183,24 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
 
 
-    def arrangeExistingLayout(self, window):
-        workspace = window.workspace()
-        untracked = [window.id]
-        for node in workspace.nodes:
-            if node.id != self.masterId and node.id not in self.stackIds:
-                # Check if window should remain untracked
-                if (self.isExcluded(node)):
-                    continue
-
-                # Flaot it to remove it from the current layout
+    def floatToggleAllWindows(self, container):
+        for node in container.nodes:
+            if node.nodes is not None and len(node.nodes) > 0:
+                # Node is a container, float its children instead of the container
+                self.floatToggleAllWindows(node)
+            else:
                 self.con.command("[con_id=%s] focus" % node.id)
                 self.con.command("floating toggle")
-                untracked.append(node.id)
-                self.log("Found untracked window %d" % node.id)
 
-        self.setStackLayout()
-        for windowId in untracked:
-            if windowId != self.masterId and windowId not in self.stackIds:
-                # Unfloat the window, then treat it like a new window
-                self.con.command("[con_id=%s] focus" % windowId)
-                self.con.command("floating tooggle")
-                self.pushWindow(windowId)
-                self.log("Pushed window %d" % windowId)
-            else:
-                self.setStackLayout()
+    def arrangeExistingLayout(self):
+        workspace = utils.findFocusedWindow(self.con).workspace()
+        self.floatToggleAllWindows(workspace)
 
-        self.log("masterId is %d" % self.masterId)
+        workspace = utils.findFocusedWindow(self.con).workspace()
+        for node in workspace.floating_nodes:
+            self.con.command("[con_id=%s] focus" % node.id)
+            self.con.command("floating tooggle")
+            self.pushWindow(node.id)
 
     def moveUp(self):
         focusedWindow = utils.findFocusedWindow(self.con)
