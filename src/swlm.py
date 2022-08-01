@@ -63,7 +63,6 @@ class SWLM:
         self.focusedWindow = None
         self.focusedWorkspace = None
         self.eventQueue = EventQueue()
-        self.con = Connection()
         setproctitle("swlm")
 
 
@@ -265,6 +264,7 @@ class SWLM:
         self.managers[workspace.num].onBinding(command)
 
 
+    # onEventAddedToQueue is called on its own thread every time an item is put in the eventQueue
     def onEventAddedToQueue(self):
         event = self.eventQueue.get()[1]
         if type(event) == BindingEvent:
@@ -340,6 +340,7 @@ class SWLM:
 
     def init(self):
         # Set event callbacks
+        self.con = Connection()
         self.con.on(Event.BINDING, self.onEvent)
         self.con.on(Event.WINDOW_FOCUS, self.onEvent)
         self.con.on(Event.WINDOW_NEW, self.onEvent)
@@ -359,6 +360,7 @@ class SWLM:
                 self.setWorkspaceLayoutManager(workspace)
                 self.workspaceWindows[workspace.num] = []
 
+        # Start i3ipc connection
         try:
             self.con.main()
         except BaseException as e:
