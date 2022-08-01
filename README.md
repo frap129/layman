@@ -5,6 +5,8 @@ responsible for managing all of the tiling windows on a given workspace. The `ma
 that each hold an implementation of a WLM, with `WorkspaceLayoutManager.py` containing the parent class from which
 all WLMs are derived.
 
+The main goal of swlm is to simplify sway(i3)-ipc into a framework/interface for programatically managing windows per-workspace.
+
 ```
 Usage: swlm.py [options]
 
