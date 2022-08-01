@@ -337,11 +337,12 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 # Swap window with master
                 self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.masterId))
 
-                # Refocus the previous master
-                self.con.command("[con_id=%d] focus" % self.masterId)
-                self.stackIds[i] = self.masterId
 
                 # Update record
+                self.stackIds[i] = self.masterId
                 self.masterId = focusedWindow.id
                 self.log("Swapped master with window %d" % focusedWindow.id)
+
+                # Refocus master
+                self.con.command("[con_id=%d] focus" % self.masterId)
                 return
