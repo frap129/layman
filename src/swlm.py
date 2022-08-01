@@ -66,6 +66,14 @@ class SWLM:
         setproctitle("swlm")
 
 
+    """
+    Window Events
+
+    The following section of code consists of functions that are called in response to
+    window events, specifically window::new, window::focus, window::close, window::move
+    and window::floating.
+    """
+
     def windowCreated(self, event):
         self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
 
@@ -183,6 +191,13 @@ class SWLM:
             self.managers[self.focusedWorkspace.num].windowAdded(event, self.focusedWindow)
 
 
+    """
+    Workspace Events
+
+    The following section of code consists of functions that are called in response to
+    workspace events, specifically workspace::init and workspace::focus.
+    """
+
     def workspaceInit(self, event):
         self.focusedWorkspace = event.current
         self.setWorkspaceLayoutManager(self.focusedWorkspace)
@@ -216,6 +231,13 @@ class SWLM:
         self.focusedWindow = window
         self.focusedWorkspace = event.current
 
+
+    """
+    Binding Events
+
+    The following function is called in response to any binding event and handles interpreting
+    the binding command or passing it to the intended workspace layout manager.
+    """
 
     def onBinding(self, event):
         # Exit early if binding isnt for slwm
@@ -264,7 +286,28 @@ class SWLM:
         self.managers[workspace.num].onBinding(command)
 
 
-    # onEventAddedToQueue is called on its own thread every time an item is put in the eventQueue
+    """
+    Event Queue Management
+
+    The following section of code consists of functions that manage how events are added,
+    removed, and sorted in the event queue. When an event is received from the i3ipc
+    connection, it is prioritized based on its type and added to the event queue. This
+    triggers the onEventAddedToQueue listener, which dispatches the event to is handler.
+    """
+
+    def onEvent(self, con, event):
+        # Set item priority
+        prioritized = (3, event)
+        if type(event) == WorkspaceEvent and event.change == "init":
+            prioritized = (0, event)
+        elif type(event) == WorkspaceEvent and event.change == "focus":
+            prioritized = (1, event)
+        elif type(event) == BindingEvent:
+            prioritized = (2, event)
+        elif type(event) == WindowEvent and event.change == "move":
+            prioritized = (4, event)
+
+
     def onEventAddedToQueue(self):
         event = self.eventQueue.get()[1]
         if type(event) == BindingEvent:
@@ -286,22 +329,15 @@ class SWLM:
             elif event.change == "close":
                 self.windowClosed(event)
 
-
-    def onEvent(self, con, event):
-        # Set item priority
-        prioritized = (3, event)
-        if type(event) == WorkspaceEvent and event.change == "init":
-            prioritized = (0, event)
-        elif type(event) == WorkspaceEvent and event.change == "focus":
-            prioritized = (1, event)
-        elif type(event) == BindingEvent:
-            prioritized = (2, event)
-        elif type(event) == WindowEvent and event.change == "move":
-            prioritized = (4, event)
-
-        self.con = con
         self.eventQueue.put(prioritized)
 
+
+    """
+    Misc functions
+
+    The following section of code handles miscellaneous tasks needed by the event
+    handlers above.
+    """
 
     def setWorkspaceLayoutManager(self, workspace):
         if workspace.num not in self.managers:
