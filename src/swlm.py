@@ -215,18 +215,20 @@ class SWLM:
             self.focusedWorkspace = event.current
             return
 
-        # Window has changed workspaces, check if it needs to be reported
-        if window.id in self.workspaceWindows[self.focusedWorkspace.num] and not self.isExcluded(self.focusedWorkspace):
-            # Window is still tracked on old workspace, remove and call windowRemoved on its manager
-            self.log("Calling windowRemoved for workspace %d" % self.focusedWorkspace.num)
-            self.workspaceWindows[self.focusedWorkspace.num].remove(window.id)
-            self.managers[self.focusedWorkspace.num].windowRemoved(event, window)
+        # Check if window has changed workspaces
+        if window.id == self.focusedWindow.id && window.workspace().num == event.current.num && self.focusedWorkspace.num == event.old.num:
+            # Window has changed workspaces, check if it needs to be reported
+            if window.id in self.workspaceWindows[self.focusedWorkspace.num] and not self.isExcluded(self.focusedWorkspace):
+                # Window is still tracked on old workspace, remove and call windowRemoved on its manager
+                self.log("Calling windowRemoved for workspace %d" % self.focusedWorkspace.num)
+                self.workspaceWindows[self.focusedWorkspace.num].remove(window.id)
+                self.managers[self.focusedWorkspace.num].windowRemoved(event, window)
                     
-        if window.id not in self.workspaceWindows[event.current.num] and not self.isExcluded(event.current):
-            # Window is not tracked on new workspace, add and call windowAdded on its manager
-            self.log("Calling windowAdded for workspace %d" % event.current.num)
-            self.workspaceWindows[event.current.num].append(window.id)
-            self.managers[event.current.num].windowAdded(event, window)
+            if window.id not in self.workspaceWindows[event.current.num] and not self.isExcluded(event.current):
+                # Window is not tracked on new workspace, add and call windowAdded on its manager
+                self.log("Calling windowAdded for workspace %d" % event.current.num)
+                self.workspaceWindows[event.current.num].append(window.id)
+                self.managers[event.current.num].windowAdded(event, window)
 
         self.focusedWindow = window
         self.focusedWorkspace = event.current
@@ -307,6 +309,8 @@ class SWLM:
         elif type(event) == WindowEvent and event.change == "move":
             prioritized = (4, event)
 
+        self.eventQueue.put(prioritized)
+
 
     def onEventAddedToQueue(self):
         event = self.eventQueue.get()[1]
@@ -328,8 +332,6 @@ class SWLM:
                 self.windowFloating(event)
             elif event.change == "close":
                 self.windowClosed(event)
-
-        self.eventQueue.put(prioritized)
 
 
     """
