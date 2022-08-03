@@ -65,8 +65,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.isExcluded(window):
             return
 
-        self.setStackLayout()
-
 
     def onBinding(self, command):
         if command == "nop swlm move up":
@@ -133,6 +131,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.masterId = windowId
             self.log("Initialized stack with %d, new master %d" % (self.stackIds[0], windowId))
             self.setMasterWidth()
+            self.setStackLayout()
             return
 
         # Put new window at top of stack
@@ -195,7 +194,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 untracked.append(node.id)
                 self.log("Found untracked window %d" % node.id)
 
-        self.setStackLayout()
         for windowId in untracked:
             if windowId != self.masterId and windowId not in self.stackIds:
                 # Unfloat the window, then treat it like a new window
@@ -203,8 +201,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.con.command("floating tooggle")
                 self.pushWindow(windowId)
                 self.log("Pushed window %d" % windowId)
-            else:
-                self.setStackLayout()
 
         self.log("masterId is %d" % self.masterId)
 
