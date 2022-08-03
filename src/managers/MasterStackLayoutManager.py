@@ -153,6 +153,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackIds.append(self.masterId)
         self.masterId = windowId
         self.setMasterWidth()
+        self.con.command("[con_id=%s] focus" % self.masterId)
 
 
     def popWindow(self):
