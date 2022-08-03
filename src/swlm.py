@@ -216,7 +216,7 @@ class SWLM:
             return
 
         # Check if window has changed workspaces
-        if window.id == self.focusedWindow.id && window.workspace().num == event.current.num && self.focusedWorkspace.num == event.old.num:
+        if window.id == self.focusedWindow.id and window.workspace().num == event.current.num and self.focusedWorkspace.num == event.old.num:
             # Window has changed workspaces, check if it needs to be reported
             if window.id in self.workspaceWindows[self.focusedWorkspace.num] and not self.isExcluded(self.focusedWorkspace):
                 # Window is still tracked on old workspace, remove and call windowRemoved on its manager
