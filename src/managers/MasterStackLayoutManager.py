@@ -29,6 +29,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
         self.masterId = 0
+        self.stackConId = 0
         self.stackIds = deque([])
         self.debug = options.debug
         self.masterWidth = options.masterWidth
@@ -132,13 +133,19 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("Initialized stack with %d, new master %d" % (self.stackIds[0], windowId))
             self.setMasterWidth()
             self.setStackLayout()
+
+            # Get stack container id
+            self.con.command("[con_id=%s] focus" % self.stackIds[0])
+            self.con.command("focus parent")
+            self.stackConId = utils.findFocusedWindow(self.con).id
             return
 
         # Put new window at top of stack
-        targetId = self.stackIds[-1]
-        self.moveWindow(windowId, targetId)
-        self.con.command("[con_id=%s] focus" % windowId)
-        self.con.command("move up")
+        self.moveWindow(windowId, self.stackConId)
+        if not self.stackLayout or self.stackLayout == "splitv":
+            self.con.command("[con_id=%s] focus" % windowId)
+            for i in range(len(self.stackIds)):
+                self.con.command("move up")
 
         # Swap with master
         prevMasterId = self.masterId
