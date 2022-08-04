@@ -21,7 +21,8 @@ class WorkspaceLayoutManager:
     # These properties should be overriden to configure your WLM as
     # Needed
     shortName = "none"
-    overridesMoveBinds = False
+    overridesMoveBinds = False # Should window movement commands be sent as binds
+    supportsFloating = False # Should windowFloating be used, or treated as Added/Removed
 
     # These are the functions you should override for to implement a
     # WLM. 
@@ -44,7 +45,7 @@ class WorkspaceLayoutManager:
         pass
 
 
-    # windowFocused is called when a window on the workpsace is focused
+    # windowFocused is called when a window on the workpsace is focused.
     def windowFocused(self, event, window):
         pass
 
@@ -52,6 +53,10 @@ class WorkspaceLayoutManager:
     # windowMoved is called when a window is moved, but stays on the same
     # workspace.
     def windowMoved(self, event, window):
+        pass
+
+    # windowFloating is called when a windows floating state is toggled.
+    def windowFloating(self, event, window):
         pass
 
 

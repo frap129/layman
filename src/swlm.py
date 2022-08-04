@@ -40,7 +40,6 @@ class EventItem:
     priority: int
     event:  any
 
-
 class EventQueue(queue.PriorityQueue):
     def __init__(self, maxsize=0):
         super().__init__(maxsize=0)
@@ -177,6 +176,12 @@ class SWLM:
         if self.isExcluded(self.focusedWorkspace):
             self.log("Workspace or output excluded")
             return
+
+        # Only send windowFloating event if wlm supports it
+        if self.managers[self.focusedWorkspace.num].supportsFloating:
+             self.log("Calling windowFloating for workspace %d" % self.focusedWorkspace.num)
+             self.managers[self.focusedWorkspace.num].windowFloating(event, self.focusedWindow)
+             return
 
         # Determine if window is floating
         i3Floating = self.focusedWindow.floating is not None and "on" in self.focusedWindow.floating
