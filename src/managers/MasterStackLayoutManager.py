@@ -180,15 +180,12 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def setStackLayout(self):
-        # splith is not supported yet. idk how to differentiate between splith and nested splith.
+        self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
         if len(self.stackIds) != 0:
             layout = self.stackLayout or "splitv"
             bottom = self.stackIds[0]
             self.con.command("[con_id=%d] split vertical" % bottom)
             self.con.command("[con_id=%d] layout %s" % (bottom, layout))
-        else:
-            self.con.command("[con_id=%d] split horizontal" % self.masterId)
-            self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
 
 
     def floatToggleAllWindows(self, container):
