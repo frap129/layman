@@ -40,6 +40,25 @@ class EventItem:
     priority: int
     event:  any
 
+    def __le__(self, b):
+         return self.priority <= b.priority
+
+    def __ge__(self, b):
+         return self.priority >= b.priority
+
+    def __lt__(self, b):
+         return self.priority < b.priority
+
+    def __gt__(self, b):
+         return self.priority > b.priority
+
+    def __eq__(self, b):
+         return self.priority == b.priority
+
+    def __ne__(self, b):
+         return self.priority != b.priority
+
+
 class EventQueue(queue.PriorityQueue):
     def __init__(self, maxsize=0):
         super().__init__(maxsize=0)
