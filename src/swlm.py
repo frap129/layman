@@ -20,7 +20,6 @@ from i3ipc import Event, Connection, BindingEvent, WorkspaceEvent, WindowEvent
 import inspect
 import logging
 from setproctitle import setproctitle
-import threading
 
 import utils
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
