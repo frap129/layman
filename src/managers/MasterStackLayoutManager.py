@@ -127,11 +127,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Check if we need to initialize the stack
         if len(self.stackIds) == 0:
             # Make sure the new window is in a valid position
-            self.moveWindow(windowId, self.masterId)
+            self.moveWindow(windowId, self.workspaceId)
 
             # Swap with master
             self.stackIds.append(self.masterId)
-            self.con.command("move left")
+            self.con.command("[con_id=%d] swap container with con_id %d" % (windowId, self.masterId))
             prevMasterId = self.masterId
             self.masterId = windowId
             self.log("Initialized stack with %d, new master %d" % (self.stackIds[0], windowId))
