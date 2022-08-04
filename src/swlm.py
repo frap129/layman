@@ -35,6 +35,12 @@ class WorkspaceLayoutManagerDict(dict):
         return None
 
 
+@dataclass
+class EventItem:
+    priority: int
+    event:  any
+
+
 class EventQueue(queue.PriorityQueue):
     def __init__(self, maxsize=0):
         super().__init__(maxsize=0)
@@ -299,21 +305,24 @@ class SWLM:
 
     def onEvent(self, con, event):
         # Set item priority
-        prioritized = (3, event)
+        priority = 3
         if type(event) == WorkspaceEvent and event.change == "init":
-            prioritized = (0, event)
+            priority = 0
         elif type(event) == WorkspaceEvent and event.change == "focus":
-            prioritized = (1, event)
+            priority = 1
         elif type(event) == BindingEvent:
-            prioritized = (2, event)
+            priority = 2
         elif type(event) == WindowEvent and event.change == "move":
-            prioritized = (4, event)
+            priority = 4
 
-        self.eventQueue.put(prioritized)
+        try:
+            self.eventQueue.put(EventItem(priority, event))
+        except TypeError as e:
+            logging.exception(e)
 
 
     def onEventAddedToQueue(self):
-        event = self.eventQueue.get()[1]
+        event = self.eventQueue.get().event
         if type(event) == BindingEvent:
             self.onBinding(event)
         if type(event) == WorkspaceEvent:
