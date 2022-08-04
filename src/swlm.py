@@ -16,13 +16,11 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
-from dataclasses import dataclass, field
 from i3ipc import Event, Connection, BindingEvent, WorkspaceEvent, WindowEvent
 import inspect
 import logging
 from setproctitle import setproctitle
 import threading
-import queue
 
 import utils
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
@@ -30,63 +28,14 @@ from managers.MasterStackLayoutManager import MasterStackLayoutManager
 from managers.AutotilingLayoutManager import AutotilingLayoutManager
 
 
-class WorkspaceLayoutManagerDict(dict):
-    def __missing__(self, key):
-        return None
-
-
-@dataclass
-class EventItem:
-    priority: int
-    event:  any
-
-    def __le__(self, b):
-         return self.priority <= b.priority
-
-    def __ge__(self, b):
-         return self.priority >= b.priority
-
-    def __lt__(self, b):
-         return self.priority < b.priority
-
-    def __gt__(self, b):
-         return self.priority > b.priority
-
-    def __eq__(self, b):
-         return self.priority == b.priority
-
-    def __ne__(self, b):
-         return self.priority != b.priority
-
-
-class EventQueue(queue.PriorityQueue):
-    def __init__(self, maxsize=0):
-        super().__init__(maxsize=0)
-        self.on_change_listeners = []
-
-
-    def _put(self, event):
-        # Add to queue
-        super()._put(event)
-
-        # Run any listeners
-        for listener in self.on_change_listeners:
-            thread = threading.Thread(target=listener)
-            thread.start()
-
-
-    def registerListener(self, listener):
-        self.on_change_listeners.append(listener)
-
-
 class SWLM:
     def __init__(self):
         self.options = utils.getUserOptions()
-        self.managers = WorkspaceLayoutManagerDict()
-        self.workspaceWindows = WorkspaceLayoutManagerDict()
+        self.managers = utils.WorkspaceLayoutManagerDict()
+        self.workspaceWindows = utils.WorkspaceLayoutManagerDict()
         self.focusedWindow = None
         self.focusedWorkspace = None
-        self.eventQueue = EventQueue()
+        self.eventQueue = utils.EventQueue()
         setproctitle("swlm")
 
 
@@ -340,7 +289,7 @@ class SWLM:
             priority = 4
 
         try:
-            self.eventQueue.put(EventItem(priority, event))
+            self.eventQueue.put(utils.EventItem(priority, event))
         except TypeError as e:
             logging.exception(e)
 
