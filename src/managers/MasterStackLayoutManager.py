@@ -132,13 +132,14 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             # Swap with master
             self.stackIds.append(self.masterId)
             self.con.command("move left")
+            prevMasterId = self.masterId
             self.masterId = windowId
             self.log("Initialized stack with %d, new master %d" % (self.stackIds[0], windowId))
             self.setMasterWidth()
             self.setStackLayout()
 
             # Get stack container id
-            self.con.command("[con_id=%s] focus" % self.stackIds[0])
+            self.con.command("[con_id=%s] focus" % prevMasterId)
             self.con.command("focus parent")
             self.stackConId = utils.findFocusedWindow(self.con).id
             return
