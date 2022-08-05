@@ -1,5 +1,5 @@
 # Start swlm
-exec ~/software/swlm/src/swlm.py -w 65 --default MasterStack
+exec ~/software/swlm/src/swlm.py
 
 # Toggle layout managers
 bindsym $mod+k nop swlm layout Autotiling
