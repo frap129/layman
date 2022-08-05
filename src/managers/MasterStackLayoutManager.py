@@ -33,7 +33,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackIds = deque([])
         self.debug = options.debug
         self.masterWidth = options.masterWidth
-        self.stackLayout = options.stackLayout
+        self.stackLayout = options.stackLayout or "splitv"
 
         # Handle window if it's not currently being tracked
         self.arrangeExistingLayout()
@@ -190,10 +190,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
     def setStackLayout(self):
         self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
         if len(self.stackIds) != 0:
-            layout = self.stackLayout or "splitv"
             bottom = self.stackIds[0]
             self.con.command("[con_id=%d] split vertical" % bottom)
-            self.con.command("[con_id=%d] layout %s" % (bottom, layout))
+            self.con.command("[con_id=%d] layout %s" % (bottom, self.stackLayout))
 
 
     def toggleStackLayout(self):
