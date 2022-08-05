@@ -26,6 +26,9 @@ Usage: swlm.py
 Because swlm is still early in development, I haven't come up with a way to package it yet. For now, clone this
 repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your PATH.
 
+## Configuration
+swlm is configured using the config file at `$HOME/.config/swlm/config.toml`. 
+
 ## Layout Managers
 
 The layout manager controlling a workspace can be dynamically changed using the command `nop swlm layout <LAYOUT>`. In
@@ -45,6 +48,11 @@ bindsym $mod+Shift+Right nop swlm move right
 The `none` layout manager does not manage any windows. It exists as a reference implementation, and to allow users
 to disable layout management on a given workspace.
 
+Config options:
+```
+debug: Boolean to control debug messages
+```
+
 Binding:
 ```
 bindym <your bind here> nop swlm layout none # disable layout management on a workspace
@@ -55,6 +63,11 @@ bindym <your bind here> nop swlm layout none # disable layout management on a wo
 Based on nwg-piotr's [autotiling](https://github.com/nwg-piotr/autotiling/blob/master/autotiling/main.py),
 the `Autotiling` layout manager alternates between splith and splitv based on a windows height/width ratio.
 `Autotiling` excludes floating tabbed, and stacked windows.
+
+Config options:
+```
+debug: Boolean to control debug messages
+```
 
 Binding:
 ```
@@ -79,6 +92,13 @@ becomes the new master.
 Known bugs:
 -  Rotation got broked
 -  Sometimes existing windows get missed when arranging an existing layout
+
+Config options:
+```
+debug: Boolean to control debug messages
+masterWidth: Int to control the percent width of master window [1-99]
+stackLayout: String to control the layout of the stack ["splitv", "tabbed", "stacking"]
+```
 
 Bindings:
 ```
