@@ -103,4 +103,8 @@ def getConfigPath():
                       metavar=".config/swlm/config.toml",
                       help="Path to user config file.")
 
-    return parser.parse_args()[0].configPath[0]
+    try:
+        path = parser.parse_args()[0].configPath[0]
+    except:
+        path = None
+    return path
