@@ -95,8 +95,8 @@ becomes the new master.
 `MasterStack` provides overrides for `move <directon>` binds. 
 
 Known bugs:
-- Breaks when a window is moved to a different workspace
-- Only works correctly if workspace has no windows when its created.
+-  Rotation got broked
+-  Sometimes existing windows get missed when arranging an existing layout
 
 Bindings:
 ```
