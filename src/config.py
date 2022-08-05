@@ -33,7 +33,7 @@ KEY_LAYOUT = "defaultLayout"
 
 class SWLMConfig(SimpleDict):
     def __init__(self, con, configPath):
-       self.reloadConfig(con, configPath)
+        self.reloadConfig(con, configPath)
 
 
     def parse(self):
@@ -66,13 +66,13 @@ class SWLMConfig(SimpleDict):
             # If workspace config doesn't have the key, try output
             output = None
             for workspace in self.con.get_workspaces():
-                if workspace.num:
+                if workspace.num == workspace.num:
                     output = workspace.output
             if output:
                 try:
                     self.config_dict[TABLE_OUTPUT][output][key]
-                except:
-                    exception(e)
+                except KeyError as e:
+                    pass
 
             # If output config doesn't have the key, falback to default
             try:

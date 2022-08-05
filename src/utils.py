@@ -100,7 +100,7 @@ def getConfigPath():
                       type="string",
                       action="callback",
                       callback=getCommaSeparatedArgs,
-                      metavar=".config/swlm/config",
+                      metavar=".config/swlm/config.toml",
                       help="Path to user config file.")
-    
-    return parser.parse_args()[0].configPath
+
+    return parser.parse_args()[0].configPath[0]
