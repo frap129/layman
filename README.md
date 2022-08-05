@@ -8,29 +8,11 @@ all WLMs are derived.
 The main goal of swlm is to simplify sway(i3)-ipc into a framework/interface for programatically managing windows per-workspace.
 
 ```
-Usage: swlm.py [options]
-
-Options:
-  -h, --help            show this help message and exit
-  --default=LAYOUT_MANAGER
-                        The LayoutManager to apply to all workspaces at
-                        startup. default: Autotiling
-  -e 1,2,.. , --exclude-workspaces=1,2,..
-                        List of workspaces numbers that should be ignored.
-  -o HDMI-0,DP-0,.. , --outputs=HDMI-0,DP-0,..
-                        List of outputs that should be used instead of all.
-  -d, --debug           Enable debug messages
-  -w WIDTH, --master-width=WIDTH
-                        MasterStack only: the percent screen width the master
-                        window should fill.
-  -l LAYOUT, --stack-layout=LAYOUT
-                        MasterStack only: The layout of the stack. ("tabbed",
-                        "stacked", "splitv") default: splitv
+Usage: swlm.py
 ```
 
 ### TODO
 - [ ] Improve configuration
-  - [ ] Configuration file with more per-workspace options 
   - [ ] Load custom WorkspaceLayoutManagers from config path
   - [ ] Reload config without restarting swlm
 - [ ] More Layouts!
