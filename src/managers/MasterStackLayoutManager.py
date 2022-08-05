@@ -112,7 +112,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def moveWindow(self, moveId, targetId):
         self.con.command("[con_id=%d] mark --add move_target" % targetId)
-        self.con.command("[con_id=%d] move container to mark move_target" % moveId)
+        self.con.command("[con_id=%d] move window to mark move_target" % moveId)
         self.con.command("[con_id=%d] unmark move_target" % targetId)
         self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
 
