@@ -91,7 +91,7 @@ def findFocusedWorkspace(con):
 
     return focused
 
-        
+
 def getConfigPath():
     parser = OptionParser()
     parser.add_option("-c",
