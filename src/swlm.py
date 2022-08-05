@@ -358,9 +358,6 @@ class SWLM:
 
 
     def init(self):
-        # Get user config options
-        self.options = config.SWLMConfig()
-
         # Set event callbacks
         self.con = Connection()
         self.con.on(Event.BINDING, self.onEvent)
@@ -371,6 +368,9 @@ class SWLM:
         self.con.on(Event.WINDOW_FLOATING, self.onEvent)
         self.con.on(Event.WORKSPACE_INIT, self.onEvent)
         self.con.on(Event.WORKSPACE_FOCUS, self.onEvent)
+
+        # Get user config options
+        self.options = config.SWLMConfig(self.con)
 
         # Register event queue listener
         self.eventQueue.registerListener(self.onEventAddedToQueue)

@@ -23,8 +23,8 @@ from utils import SimpleDict
 CONFIG_PATH = ".config/swlm/config.toml"
 
 TABLE_SWLM = "swlm"
-TABLE_WORKSPACE = "workspaces"
-TABLE_WORKSPACE = "outputs"
+TABLE_WORKSPACE = "workspace"
+TABLE_OUTPUT = "output"
 KEY_DEBUG = "debug"
 KEY_EXCLUDED_WORKSPACES = "excludeWworkspaces"
 KEY_EXCLUDED_OUTPUTS = "excludeOutputs"
@@ -32,8 +32,8 @@ KEY_LAYOUT = "defaultLayout"
 
 
 class SWLMConfig(SimpleDict):
-    def __init__(self):
-       self.reloadConfig()
+    def __init__(self, con):
+       self.reloadConfig(con)
 
 
     def parse(self):
@@ -45,7 +45,8 @@ class SWLMConfig(SimpleDict):
                 return {}
 
 
-    def reloadConfig(self):
+    def reloadConfig(self, con):
+        self.con = con
         self.config_dict = self.parse()
 
 
@@ -57,9 +58,22 @@ class SWLMConfig(SimpleDict):
 
 
     def getForWorkspace(self, workspaceNum, key):
+        # Try to get value for the workspace
         try:
             value = self.config_dict[TABLE_WORKSPACE][workspaceNum][key]
         except KeyError:
+            # If workspace config doesn't have the key, try output
+            output = None
+            for workspace in self.con.get_workspaces():
+                if workspace.num:
+                    output = workspace.output
+            if output:
+                try:
+                    self.config_dict[TABLE_OUTPUT][output][key]
+                except:
+                    exception(e)
+
+            # If output config doesn't have the key, falback to default
             try:
                 value = self.config_dict[TABLE_SWLM][key]
             except KeyError:
