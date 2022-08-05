@@ -370,7 +370,7 @@ class SWLM:
         self.con.on(Event.WORKSPACE_FOCUS, self.onEvent)
 
         # Get user config options
-        self.options = config.SWLMConfig(self.con)
+        self.options = config.SWLMConfig(self.con, utils.getConfigPath())
 
         # Register event queue listener
         self.eventQueue.registerListener(self.onEventAddedToQueue)

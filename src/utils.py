@@ -90,3 +90,17 @@ def findFocusedWorkspace(con):
             break
 
     return focused
+
+        
+def getConfigPath():
+    parser = OptionParser()
+    parser.add_option("-c",
+                      "--config",
+                      dest="configPath",
+                      type="string",
+                      action="callback",
+                      callback=getCommaSeparatedArgs,
+                      metavar=".config/swlm/config",
+                      help="Path to user config file.")
+    
+    return parser.parse_args()[0].configPath

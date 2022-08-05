@@ -32,12 +32,12 @@ KEY_LAYOUT = "defaultLayout"
 
 
 class SWLMConfig(SimpleDict):
-    def __init__(self, con):
-       self.reloadConfig(con)
+    def __init__(self, con, configPath):
+       self.reloadConfig(con, configPath)
 
 
     def parse(self):
-        with open(CONFIG_PATH, "rb") as f:
+        with open(self.configPath, "rb") as f:
             try:
                 return tomli.load(f)
             except Exception as e:
@@ -45,7 +45,8 @@ class SWLMConfig(SimpleDict):
                 return {}
 
 
-    def reloadConfig(self, con):
+    def reloadConfig(self, con, configPath):
+        self.configPath = configPath or CONFIG_PATH
         self.con = con
         self.config_dict = self.parse()
 
