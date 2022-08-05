@@ -35,10 +35,11 @@ repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your
 
 swlm is configured using the config file at `$HOME/.config/swlm/config.toml` using TOML. The `[swlm]` table configures
 options specific to the main swlm daemon, and any that should apply to all outputs and workspaces. Specific outputs and
-workspaces can be configured in their own sections by using `[output.VALUE]` or `[workspace.VALUE]` header, where `VALUE`
+workspaces can be configured in their own tables by using `[output.VALUE]` or `[workspace.VALUE]` header, where `VALUE`
 is either the name of the output, or the number of the workspace being configured. Any options configured will override
-the values set in the `[swlm]` section for that output or workspace. Note, values configured for outputs will only apply
-to workspaces **created** on that output. For an example configuration, see the config.toml file in the root of this repo.
+the values set in the `[swlm]` table for that output or workspace. Note, values configured for outputs will only apply
+to workspaces **created** on that output. For an example configuration, see the `config.toml` file in the root of this
+repo.
 
 ## Layout Managers
 
