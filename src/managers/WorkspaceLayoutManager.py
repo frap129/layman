@@ -17,6 +17,8 @@ swlm. If not, see <https://www.gnu.org/licenses/>.
 """
 import inspect
 
+from config import KEY_DEBUG
+
 class WorkspaceLayoutManager:
     # These properties should be overriden to configure your WLM as
     # Needed
@@ -30,7 +32,7 @@ class WorkspaceLayoutManager:
         self.con = con
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
-        self.debug = options.debug
+        self.debug = options.getForWorkspace(self.workspaceNum, KEY_DEBUG)
 
 
     # windowAdded is called when a new window is added to the workpsace,

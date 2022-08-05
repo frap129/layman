@@ -11,26 +11,13 @@ The main goal of swlm is to simplify sway(i3)-ipc into a framework/interface for
 Usage: swlm.py [options]
 
 Options:
-  -h, --help            show this help message and exit
-  --default=LAYOUT_MANAGER
-                        The LayoutManager to apply to all workspaces at
-                        startup. default: Autotiling
-  -e 1,2,.. , --exclude-workspaces=1,2,..
-                        List of workspaces numbers that should be ignored.
-  -o HDMI-0,DP-0,.. , --outputs=HDMI-0,DP-0,..
-                        List of outputs that should be used instead of all.
-  -d, --debug           Enable debug messages
-  -w WIDTH, --master-width=WIDTH
-                        MasterStack only: the percent screen width the master
-                        window should fill.
-  -l LAYOUT, --stack-layout=LAYOUT
-                        MasterStack only: The layout of the stack. ("tabbed",
-                        "stacked", "splitv") default: splitv
+  -h, --help                   show this help message and exit
+  -c .config/swlm/config.toml, --config=.config/swlm/config.toml
+                               Path to user config file.
 ```
 
 ### TODO
 - [ ] Improve configuration
-  - [ ] Configuration file with more per-workspace options 
   - [ ] Load custom WorkspaceLayoutManagers from config path
   - [ ] Reload config without restarting swlm
 - [ ] More Layouts!
@@ -43,6 +30,16 @@ Options:
 
 Because swlm is still early in development, I haven't come up with a way to package it yet. For now, clone this
 repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your PATH.
+
+## Configuration
+
+swlm is configured using the config file at `$HOME/.config/swlm/config.toml` using TOML. The `[swlm]` table configures
+options specific to the main swlm daemon, and any that should apply to all outputs and workspaces. Specific outputs and
+workspaces can be configured in their own tables by using `[output.VALUE]` or `[workspace.VALUE]` header, where `VALUE`
+is either the name of the output, or the number of the workspace being configured. Any options configured will override
+the values set in the `[swlm]` table for that output or workspace. Note, values configured for outputs will only apply
+to workspaces **created** on that output. For an example configuration, see the `config.toml` file in the root of this
+repo.
 
 ## Layout Managers
 
@@ -63,6 +60,11 @@ bindsym $mod+Shift+Right nop swlm move right
 The `none` layout manager does not manage any windows. It exists as a reference implementation, and to allow users
 to disable layout management on a given workspace.
 
+Config options:
+```
+debug: Boolean to control debug messages
+```
+
 Binding:
 ```
 bindym <your bind here> nop swlm layout none # disable layout management on a workspace
@@ -73,6 +75,11 @@ bindym <your bind here> nop swlm layout none # disable layout management on a wo
 Based on nwg-piotr's [autotiling](https://github.com/nwg-piotr/autotiling/blob/master/autotiling/main.py),
 the `Autotiling` layout manager alternates between splith and splitv based on a windows height/width ratio.
 `Autotiling` excludes floating tabbed, and stacked windows.
+
+Config options:
+```
+debug: Boolean to control debug messages
+```
 
 Binding:
 ```
@@ -97,6 +104,13 @@ becomes the new master.
 Known bugs:
 -  Rotation got broked
 -  Sometimes existing windows get missed when arranging an existing layout
+
+Config options:
+```
+debug: Boolean to control debug messages
+masterWidth: Int to control the percent width of master window [1-99]
+stackLayout: String to control the layout of the stack ["splitv", "tabbed", "stacking"]
+```
 
 Bindings:
 ```

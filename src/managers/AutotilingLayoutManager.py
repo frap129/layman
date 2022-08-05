@@ -24,10 +24,7 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
     shortName = "Autotiling"
 
     def __init__(self, con, workspace, options):
-        self.con = con
-        self.workspaceId = workspace.ipc_data["id"]
-        self.workspaceNum = workspace.num
-        self.debug = options.debug
+        super().__init__(con, workspace, options)
 
     def isExcluded(self, window):
         if window is None:
