@@ -1,4 +1,4 @@
-# [WIP] swlm - Sway Workspace Layout Manager
+# swlm - Sway Workspace Layout Manager
 
 swlm is a daemon that handles layout management on a per-workspace basis. Each `WorkspaceLayoutManager` (WLM) is
 responsible for managing all of the tiling windows on a given workspace. The `mananagers/` directoy contains files
@@ -33,14 +33,12 @@ Options:
   - [ ] Configuration file with more per-workspace options 
   - [ ] Load custom WorkspaceLayoutManagers from config path
   - [ ] Reload config without restarting swlm
-- [ ] Differentiate WLMs that support managing existing windows
-  - [ ] Add warning (swaynag?) when enabling WLMs that don't support existing windows on a workspace with windows
 - [ ] More Layouts!
 - [ ] MasterStack:
+  - [ ] Fix popping window when stack is tabbed layout
   - [ ] Maintain user-set window sizes for each wndow position
   - [ ] Automatically arrange pre-existing windows into correct layout
   - [x] ~Handle windows moved out of layout~
-- [ ] idk im probably forgetting a lot
 - [x] ~Replace "windowClosed?" in WLMs with "windowRemoved", call it when a window closes OR moves to a different workspace~
 - [X] ~Differentiate WLMs that support window movement~
   - [X] ~Add wrappers for window movement. Defaults would be used for WLMs that support movement, but WLMs that don't can override with better defaults (ex for MasterStack: replace up/down with move up/down in stack, left/right with rotation)~
