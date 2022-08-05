@@ -19,6 +19,7 @@ debug = false			# Enable debug messages for WLMs on this output
 stackLayout = "splitv"	# MasterStack: Default stack layout for workspaces on this output
 masterWidth = 50		# MasterStack: Default master width for workspaces on this output
 
+
 # `workspace` sections configure options for the specified workspace.
 [workspace.1]
 defaultLayout = "none"	# The default WLM to assign to this workspace
