@@ -173,7 +173,13 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         # If stack is not empty, we need to move the view to the master position
         if len(self.stackIds) != 0:
-            self.con.command("move left")
+            if self.stackLayout != "tabbed":
+                self.con.command("move left")
+            else:
+                self.con.command("move right")
+                self.con.command("[con_id=%s] swap container with con_id %s" % (self.stackConId, self.masterId))
+                self.con.command("[con_id=%s] focus" % self.masterId)
+
             self.setMasterWidth()
 
         self.log("Moved top of stack to master")
