@@ -8,7 +8,12 @@ all WLMs are derived.
 The main goal of swlm is to simplify sway(i3)-ipc into a framework/interface for programatically managing windows per-workspace.
 
 ```
-Usage: swlm.py
+Usage: swlm.py [options]
+
+Options:
+  -h, --help                   show this help message and exit
+  -c .config/swlm/config.toml, --config=.config/swlm/config.toml
+                               Path to user config file.
 ```
 
 ### TODO
@@ -27,7 +32,13 @@ Because swlm is still early in development, I haven't come up with a way to pack
 repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your PATH.
 
 ## Configuration
-swlm is configured using the config file at `$HOME/.config/swlm/config.toml`. 
+
+swlm is configured using the config file at `$HOME/.config/swlm/config.toml` using TOML. The `[swlm]` table configures
+options specific to the main swlm daemon, and any that should apply to all outputs and workspaces. Specific outputs and
+workspaces can be configured in their own sections by using `[output.VALUE]` or `[workspace.VALUE]` header, where `VALUE`
+is either the name of the output, or the number of the workspace being configured. Any options configured will override
+the values set in the `[swlm]` section for that output or workspace. Note, values configured for outputs will only apply
+to workspaces **created** on that output. For an example configuration, see the config.toml file in the root of this repo.
 
 ## Layout Managers
 
