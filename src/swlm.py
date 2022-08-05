@@ -187,7 +187,7 @@ class SWLM:
             return
 
         window = utils.findFocusedWindow(self.con)
-        if window.id != self.focusedWindow.id:
+        if self.focusedWindow != None and window.id != self.focusedWindow.id:
             #  Exit early if all we did was focus a new window
             self.focusedWindow = window
             self.focusedWorkspace = event.current

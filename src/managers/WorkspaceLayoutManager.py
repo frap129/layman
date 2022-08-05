@@ -62,7 +62,7 @@ class WorkspaceLayoutManager:
 
     # onBinding is called when a key binding is pressed while the workspace
     # is focused.
-    def onBinding(self, command, window):
+    def onBinding(self, command):
         pass
 
 

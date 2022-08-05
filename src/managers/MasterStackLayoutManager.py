@@ -81,6 +81,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.rotateCW()
         elif command == "nop swlm swap master":
             self.swapMaster()
+        elif command == "nop swlm stack toggle":
+            self.toggleStackLayout()
 
 
     def isExcluded(self, window):
@@ -192,6 +194,23 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             bottom = self.stackIds[0]
             self.con.command("[con_id=%d] split vertical" % bottom)
             self.con.command("[con_id=%d] layout %s" % (bottom, layout))
+
+
+    def toggleStackLayout(self):
+        # Pick next stack layout
+        if self.stackLayout == "splitv":
+            self.stackLayout = "tabbed"
+        elif self.stackLayout == "tabbed":
+            self.stackLayout = "stacking"
+        elif self.stackLayout == "stacking":
+            self.stackLayout = "splitv"
+        else:
+            return
+
+        # Apply the new stack layout
+        if len(self.stackIds) != 0:
+            self.con.command("[con_id=%d] layout %s" % (self.stackIds[0], self.stackLayout))
+            self.log("Changed stackLayout to %s" % self.stackLayout)
 
 
     def floatToggleAllWindows(self, container):

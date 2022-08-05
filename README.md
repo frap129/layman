@@ -37,6 +37,7 @@ Options:
 - [ ] MasterStack:
   - [ ] Maintain user-set window sizes for each wndow position
   - [ ] Automatically arrange pre-existing windows into correct layout
+  - [ ] Fix rotation
 
 ## Installation
 
@@ -82,11 +83,14 @@ bindym <your bind here> nop swlm layout Autotiling # set focused workspace's lay
 
 `MasterStack` is inspired by dwm/dwl/river, but is my own take on it. It implements a master window with a stack
 on the right side. When a new window is created, it replaces master and master is placed on top of the stack.
-If the master window is deleted, the top of the stack replaces master. `MasterStack` implements a keybind for
-swapping. When swapping, the focused window is swapped with master. If the focused window is master, it gets
-swapped with the top of the stack. `MasterStack` also implements rotation. When rotating counter-clockwise,
-master is moved to the bottom of the stack, and the top of the stack becomes the new master. Conversely,
-rotating clockwise moves master to the top of the stack, and the bottom of the stack becomes the new master.
+If the master window is deleted, the top of the stack replaces master. The layout of the stack container can be
+`splitv`, `tabbed`, or `stacking` The layout of the stack can be toggled using a keybind.
+
+`MasterStack` also implements a keybind for swapping. When swapping, the focused window is swapped with master. If
+the focused window is master, it gets swapped with the top of the stack. `MasterStack` also implements rotation.
+When rotating counter-clockwise, master is moved to the bottom of the stack, and the top of the stack becomes the
+new master. Conversely, rotating clockwise moves master to the top of the stack, and the bottom of the stack
+becomes the new master.
 
 `MasterStack` provides overrides for `move <directon>` binds. 
 
@@ -102,4 +106,5 @@ bindym <your bind here> nop swlm rotate cw # rotate layout cw 1 window
 bindym <your bind here> nop swlm rotate ccw # rotate layout ccw 1 window
 bindym <your bind here> nop swlm move up # move focused winodw up 1 position in the stack
 bindym <your bind here> nop swlm move down # move focused window down one position in the stack
+bindym <your bind here> nop swlm stack toggle # toggles stack layout through splitv, tabbed, and stacking
 ```
