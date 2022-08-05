@@ -22,6 +22,7 @@ import logging
 from setproctitle import setproctitle
 
 import utils
+import config
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 from managers.MasterStackLayoutManager import MasterStackLayoutManager
 from managers.AutotilingLayoutManager import AutotilingLayoutManager
@@ -29,9 +30,8 @@ from managers.AutotilingLayoutManager import AutotilingLayoutManager
 
 class SWLM:
     def __init__(self):
-        self.options = utils.getUserOptions()
-        self.managers = utils.WorkspaceLayoutManagerDict()
-        self.workspaceWindows = utils.WorkspaceLayoutManagerDict()
+        self.managers = utils.SimpleDict()
+        self.workspaceWindows = utils.SimpleDict()
         self.focusedWindow = None
         self.focusedWorkspace = None
         self.eventQueue = utils.EventQueue()
@@ -324,10 +324,10 @@ class SWLM:
 
     def setWorkspaceLayoutManager(self, workspace):
         if workspace.num not in self.managers:
-            if self.options.default == AutotilingLayoutManager.shortName:
+            if  self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT) == AutotilingLayoutManager.shortName:
                 self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d with %s" % (workspace.num, self.managers[workspace.num].shortName))
-            elif self.options.default == MasterStackLayoutManager.shortName:
+            elif self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT) == MasterStackLayoutManager.shortName:
                 self.managers[workspace.num] = MasterStackLayoutManager(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
         if workspace.num not in self.workspaceWindows:
@@ -335,12 +335,12 @@ class SWLM:
 
 
     def log(self, msg):
-        if self.options.debug:
+        if self.options.getDefault(config.KEY_DEBUG):
             print("%s: %s" % (inspect.stack()[1][3], msg))
 
 
     def logCaller(self, msg):
-        if self.options.debug:
+        if self.options.getDefault(config.KEY_DEBUG):
             print("%s: %s" % (inspect.stack()[2][3], msg))
 
 
@@ -348,16 +348,19 @@ class SWLM:
         if workspace is None:
             return True
 
-        if self.options.excludes and workspace.num in self.options.excludes:
+        if self.options.getDefault(config.KEY_EXCLUDED_WORKSPACES) and workspace.num in self.options.getDefault(config.KEY_EXCLUDED_WORKSPACES):
             return True
 
-        if self.options.outputs and workspace.ipc_data["output"] not in self.options.outputs:
+        if self.options.getDefault(config.KEY_EXCLUDED_OUTPUTS) and workspace.ipc_data["output"] in self.options.getDefault(config.KEY_EXCLUDED_OUTPUTS):
             return True
 
         return False
 
 
     def init(self):
+        # Get user config options
+        self.options = config.SWLMConfig()
+
         # Set event callbacks
         self.con = Connection()
         self.con.on(Event.BINDING, self.onEvent)
@@ -374,7 +377,7 @@ class SWLM:
         self.log("swlm started")
 
         # Set default layout maangers
-        if self.options.default and self.options.default != "none":
+        if self.options.getDefault(config.KEY_LAYOUT):
             for workspace in self.con.get_workspaces():
                 self.setWorkspaceLayoutManager(workspace)
                 self.workspaceWindows[workspace.num] = []

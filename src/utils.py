@@ -23,7 +23,7 @@ import queue
 import threading
 
 
-class WorkspaceLayoutManagerDict(dict):
+class SimpleDict(dict):
     def __missing__(self, key):
         return None
 
@@ -90,51 +90,3 @@ def findFocusedWorkspace(con):
             break
 
     return focused
-
-        
-def getUserOptions():
-    parser = OptionParser()
-    parser.add_option("--default",
-                      dest="default",
-                      action="store",
-                      metavar="LAYOUT_MANAGER",
-                      default="Autotiling",
-                      help="The LayoutManager to apply to all workspaces at startup. default: Autotiling",
-                      choices=["none", "Autotiling", "MasterStack"])
-    parser.add_option("-e",
-                      "--exclude-workspaces",
-                      dest="excludes",
-                      type="string",
-                      action="callback",
-                      callback=getCommaSeparatedArgs,
-                      metavar="1,2,.. ",
-                      help="List of workspaces numbers that should be ignored.")
-    parser.add_option("-o",
-                      "--outputs",
-                      dest="outputs",
-                      type="string",
-                      action="callback",
-                      callback=getCommaSeparatedArgs,
-                      metavar="HDMI-0,DP-0,.. ",
-                      help="List of outputs that should be used instead of all.")
-    parser.add_option("-d",
-                      "--debug",
-                      dest="debug",
-                      action="store_true",
-                      help="Enable debug messages")
-    parser.add_option("-w",
-                      "--master-width",
-                      dest="masterWidth",
-                      type="int",
-                      action="store",
-                      metavar="WIDTH",
-                      help="MasterStack only: the percent screen width the master window should fill.")
-    parser.add_option("-l",
-                      "--stack-layout",
-                      dest="stackLayout",
-                      action="store",
-                      metavar="LAYOUT",
-                      help='MasterStack only: The layout of the stack. ("tabbed", "stacking", "splitv") default: splitv',
-                      choices=["tabbed", "stacking", "splitv"])  # splith not yet supported
-    
-    return parser.parse_args()[0]

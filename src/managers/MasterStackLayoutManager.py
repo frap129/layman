@@ -20,20 +20,20 @@ from collections import deque
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 import utils
 
+KEY_MASTER_WIDTH = "masterWidth"
+KEY_STACK_LAYOUT = "stackLayout"
+
 class MasterStackLayoutManager(WorkspaceLayoutManager):
     shortName = "MasterStack"
     overridesMoveBinds = True
 
     def __init__(self, con, workspace, options):
-        self.con = con
-        self.workspaceId = workspace.ipc_data["id"]
-        self.workspaceNum = workspace.num
+        super().__init__(con, workspace, options)
         self.masterId = 0
         self.stackConId = 0
         self.stackIds = deque([])
-        self.debug = options.debug
-        self.masterWidth = options.masterWidth
-        self.stackLayout = options.stackLayout or "splitv"
+        self.masterWidth = options.getForWorkspace(self.workspaceNum, KEY_MASTER_WIDTH) or 50
+        self.stackLayout = options.getForWorkspace(self.workspaceNum, KEY_STACK_LAYOUT) or "splitv"
 
         # Handle window if it's not currently being tracked
         self.arrangeExistingLayout()

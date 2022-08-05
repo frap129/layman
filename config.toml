@@ -1,0 +1,14 @@
+[swlm]
+defaultLayout = "Autotiling"
+excludedWorkspaces = [ 9, 10 ]
+stackLayout = "tabbed"
+masterWidth = 70
+debug = true
+
+[workspace.1]
+defaultLayout = "MasterStack"
+
+[workspace.2]
+defaultLayout = "MasterStack"
+stackLayout = "splitv"
+masterWidth = 65
