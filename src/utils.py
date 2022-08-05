@@ -134,7 +134,7 @@ def getUserOptions():
                       dest="stackLayout",
                       action="store",
                       metavar="LAYOUT",
-                      help='MasterStack only: The layout of the stack. ("tabbed", "stacked", "splitv") default: splitv',
-                      choices=["tabbed", "stacked", "splitv"])  # splith not yet supported
+                      help='MasterStack only: The layout of the stack. ("tabbed", "stacking", "splitv") default: splitv',
+                      choices=["tabbed", "stacking", "splitv"])  # splith not yet supported
     
     return parser.parse_args()[0]
