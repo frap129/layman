@@ -249,14 +249,17 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("Swapped window %d with master" % targetId)
             return
 
-        for i in range(len(self.stackIds)):
-            if self.stackIds[i] == focusedWindow.id:
-                # Swap window with window above
-                self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[i+1]))
-                self.stackIds[i] = self.stackIds[i+1]
-                self.stackIds[i+1] = focusedWindow.id
-                self.log("Swapped window %d with %d" % (focusedWindow.id, self.stackIds[i]))
-                return
+        # Swap window with window above
+        try:
+            index = self.stackIds.index(focusedWindow.id)
+        except ValueError:
+            self.log("Window %d not found in stack" % focusedWindow.id)
+            return
+
+        self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[index+1]))
+        self.stackIds[index] = self.stackIds[index+1]
+        self.stackIds[index+1] = focusedWindow.id
+        self.log("Swapped window %d with %d" % (focusedWindow.id, self.stackIds[index]))
 
 
     def moveDown(self):
@@ -282,14 +285,17 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("Swapped master %d with top of stack %d" % (self.stackIds[-1], self.masterId))
             return
 
-        for i in range(len(self.stackIds)):
-            if self.stackIds[i] == focusedWindow.id:
-                # Swap window with window below
-                self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[i-1]))
-                self.stackIds[i] = self.stackIds[i-1]
-                self.stackIds[i-1] = focusedWindow.id
-                self.log("Swapped window %d with %d" % (focusedWindow.id, self.stackIds[i]))
-                return
+        # Swap window with window below
+        try:
+            index = self.stackIds.index(focusedWindow.id)
+        except ValueError:
+            self.log("Window %d not found in stack" % focusedWindow.id)
+            return
+
+        self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.stackIds[index-1]))
+        self.stackIds[index] = self.stackIds[index-1]
+        self.stackIds[index-1] = focusedWindow.id
+        self.log("Swapped window %d with %d" % (focusedWindow.id, self.stackIds[index]))
 
 
     def rotateCCW(self):
@@ -326,7 +332,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("swapped bottom of stack with master")
         self.moveWindow(prevMasterId, topId)
         self.con.command("[con_id=%d] focus" % prevMasterId)
-        self.con.command("move up")
+        if self.stackLayout != "tabbed":
+            self.con.command("move up")
+        else:
+            self.con.command("move left")
         self.con.command("[con_id=%d] focus" % newMasterId)
         self.log("Moved previous master to top of stack")
 

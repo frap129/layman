@@ -41,9 +41,8 @@ class SWLM:
     """
     Window Events
 
-    The following section of code consists of functions that are called in response to
-    window events, specifically window::new, window::focus, window::close, window::move
-    and window::floating.
+    The following functions that are called in response to window events, specifically
+    window::new, window::focus, window::close, window::move, and window::floating.
     """
 
     def windowCreated(self, event):
@@ -172,8 +171,8 @@ class SWLM:
     """
     Workspace Events
 
-    The following section of code consists of functions that are called in response to
-    workspace events, specifically workspace::init and workspace::focus.
+    The following functions are called in response to workspace events, specifically
+    workspace::init and workspace::focus.
     """
 
     def workspaceInit(self, event):
@@ -269,10 +268,10 @@ class SWLM:
     """
     Event Queue Management
 
-    The following section of code consists of functions that manage how events are added,
-    removed, and sorted in the event queue. When an event is received from the i3ipc
-    connection, it is prioritized based on its type and added to the event queue. This
-    triggers the onEventAddedToQueue listener, which dispatches the event to is handler.
+    The following functions manage how events are added, removed, and sorted in the
+    event queue. When an event is received from the i3ipc connection, it is prioritized
+    based on its type and added to the event queue. This triggers the
+    onEventAddedToQueue listener, which dispatches the event to is handler.
     """
 
     def onEvent(self, con, event):
