@@ -69,6 +69,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.isExcluded(window):
             return
 
+        # Make sure the focused window is visible
+        if self.stackLayout != "splitv" and window.id in self.stackIds:
+            self.con.command("focus child")
+
 
     def onBinding(self, command):
         if command == "nop swlm move up":
