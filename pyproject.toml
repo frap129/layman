@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swlm"
+version = "0.1.0"
+description = "A package created with a setuptools tutorial.  See article link for more details."
+readme = "README.md"
+license = {text = "GPL v3"}
+dependencies = [
+    "i3ipc",
+    "setproctitle",
+    "tomli",
+]
+
+[project.scripts]
+swlm = "swlm.__main__:main"
