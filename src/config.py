@@ -31,7 +31,7 @@ KEY_EXCLUDED_OUTPUTS = "excludeOutputs"
 KEY_LAYOUT = "defaultLayout"
 
 
-class SWLMConfig(SimpleDict):
+class SWLMConfig():
     def __init__(self, con, configPath):
         self.reloadConfig(con, configPath)
 
@@ -48,12 +48,12 @@ class SWLMConfig(SimpleDict):
     def reloadConfig(self, con, configPath):
         self.configPath = configPath or CONFIG_PATH
         self.con = con
-        self.config_dict = self.parse()
+        self.configDict = self.parse()
 
 
     def getDefault(self, key):
         try:
-            return self.config_dict[TABLE_SWLM][key]
+            return self.configDict[TABLE_SWLM][key]
         except KeyError:
             return None
 
@@ -61,7 +61,7 @@ class SWLMConfig(SimpleDict):
     def getForWorkspace(self, workspaceNum, key):
         # Try to get value for the workspace
         try:
-            value = self.config_dict[TABLE_WORKSPACE][str(workspaceNum)][key]
+            value = self.configDict[TABLE_WORKSPACE][str(workspaceNum)][key]
         except KeyError:
             # If workspace config doesn't have the key, try output
             output = None
@@ -70,13 +70,13 @@ class SWLMConfig(SimpleDict):
                     output = workspace.output
             if output:
                 try:
-                    self.config_dict[TABLE_OUTPUT][output][key]
+                    self.configDict[TABLE_OUTPUT][output][key]
                 except KeyError as e:
                     pass
 
             # If output config doesn't have the key, falback to default
             try:
-                value = self.config_dict[TABLE_SWLM][key]
+                value = self.configDict[TABLE_SWLM][key]
             except KeyError:
                 value = None
 
