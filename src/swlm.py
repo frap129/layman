@@ -17,8 +17,10 @@ You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
 from i3ipc import Event, Connection, BindingEvent, WorkspaceEvent, WindowEvent
+import imp
 import inspect
 import logging
+import os
 from setproctitle import setproctitle
 
 import utils
@@ -35,6 +37,7 @@ class SWLM:
         self.focusedWindow = None
         self.focusedWorkspace = None
         self.eventQueue = utils.EventQueue()
+        self.userLayouts = utils.SimpleDict()
         setproctitle("swlm")
 
 
@@ -321,18 +324,42 @@ class SWLM:
     handlers above.
     """
 
+    def fetchLayouts(self):
+        layoutPath = os.path.dirname(utils.getConfigPath())
+        for file in os.listdir(layoutPath):
+            if file.endswith(".py"):
+                className = os.path.splitext(file)[0]
+                try:
+                    fp, path, desc = imp.find_module(className, [layoutPath])
+                    package = imp.load_module(className, fp, path, desc)
+                    self.userLayouts[className] = package
+                except ImportError:
+                    self.log("Layout not found: " + name)
+
+
     def setWorkspaceLayoutManager(self, workspace):
         # Check if we should manage workspace
-        if isExcluded(workspace):
+        if self.isExcluded(workspace):
             return
 
+        layoutName = self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT)
         if workspace.num not in self.managers:
-            if  self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT) == AutotilingLayoutManager.shortName:
+            if layoutName == AutotilingLayoutManager.shortName:
                 self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d with %s" % (workspace.num, self.managers[workspace.num].shortName))
-            elif self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT) == MasterStackLayoutManager.shortName:
+            elif layoutName == MasterStackLayoutManager.shortName:
                 self.managers[workspace.num] = MasterStackLayoutManager(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
+            elif layoutName == WorkspaceLayoutManager.shortName:
+                self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
+                self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
+            else:
+                for name in self.userLayouts:
+                    if getattr(self.userLayouts[name], name).shortName == layoutName:
+                        self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
+                        self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
+                        break
+                
         if workspace.num not in self.workspaceWindows:
             self.workspaceWindows[workspace.num] = []
 
@@ -374,6 +401,7 @@ class SWLM:
 
         # Get user config options
         self.options = config.SWLMConfig(self.con, utils.getConfigPath())
+        self.fetchLayouts()
 
         # Register event queue listener
         self.eventQueue.registerListener(self.onEventAddedToQueue)
