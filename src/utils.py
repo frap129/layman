@@ -106,5 +106,5 @@ def getConfigPath():
     try:
         path = parser.parse_args()[0].configPath[0]
     except:
-        path = None
+        path = ".config/swlm/config.toml"
     return path
