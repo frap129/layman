@@ -26,7 +26,7 @@ TABLE_SWLM = "swlm"
 TABLE_WORKSPACE = "workspace"
 TABLE_OUTPUT = "output"
 KEY_DEBUG = "debug"
-KEY_EXCLUDED_WORKSPACES = "excludeWworkspaces"
+KEY_EXCLUDED_WORKSPACES = "excludeWorkspaces"
 KEY_EXCLUDED_OUTPUTS = "excludeOutputs"
 KEY_LAYOUT = "defaultLayout"
 
@@ -61,7 +61,7 @@ class SWLMConfig(SimpleDict):
     def getForWorkspace(self, workspaceNum, key):
         # Try to get value for the workspace
         try:
-            value = self.config_dict[TABLE_WORKSPACE][workspaceNum][key]
+            value = self.config_dict[TABLE_WORKSPACE][str(workspaceNum)][key]
         except KeyError:
             # If workspace config doesn't have the key, try output
             output = None
