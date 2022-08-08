@@ -244,6 +244,14 @@ class SWLM:
             self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
             return
 
+        # Handle reload command
+        if command == "nop swlm reload":
+            # Get user config options
+            self.options = config.SWLMConfig(self.con, utils.getConfigPath())
+            self.fetchLayouts()
+            self.log("Reloaded swlm config")
+            return
+
         # Handle wlm creation commands
         if command == "nop swlm layout none":
             # Create no-op WLM to prevent onWorkspace from overwriting
@@ -328,6 +336,7 @@ class SWLM:
         layoutPath = os.path.dirname(utils.getConfigPath())
         for file in os.listdir(layoutPath):
             if file.endswith(".py"):
+                # Assume all python files in the config path are layouts, load them
                 className = os.path.splitext(file)[0]
                 try:
                     fp, path, desc = imp.find_module(className, [layoutPath])
@@ -354,12 +363,13 @@ class SWLM:
                 self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
             else:
+                # If the layout isn't prebundled, search user layours
                 for name in self.userLayouts:
                     if getattr(self.userLayouts[name], name).shortName == layoutName:
                         self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
                         self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
                         break
-                
+
         if workspace.num not in self.workspaceWindows:
             self.workspaceWindows[workspace.num] = []
 
