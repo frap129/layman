@@ -322,6 +322,10 @@ class SWLM:
     """
 
     def setWorkspaceLayoutManager(self, workspace):
+        # Check if we should manage workspace
+        if isExcluded(workspace):
+            return
+
         if workspace.num not in self.managers:
             if  self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT) == AutotilingLayoutManager.shortName:
                 self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
