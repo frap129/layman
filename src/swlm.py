@@ -253,17 +253,19 @@ class SWLM:
             return
 
         # Handle wlm creation commands
-        if command == "nop swlm layout none":
-            # Create no-op WLM to prevent onWorkspace from overwriting
-            self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
-            self.log("Destroyed manager on workspace %d" % workspace.num)
-            return
-        elif command == "nop swlm layout MasterStack":
-            self.managers[workspace.num] = MasterStackLayoutManager(self.con, workspace, self.options)
-            self.log("Created %s on workspace %d" % (self.managers[workspace.num].shortName, workspace.num))
-            return
-        elif command == "nop swlm layout Autotiling":
-            self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
+        if "nop swlm layout " in command:
+            if command == "nop swlm layout none":
+                # Create no-op WLM to prevent onWorkspace from overwriting
+                self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
+            elif command == "nop swlm layout MasterStack":
+                self.managers[workspace.num] = MasterStackLayoutManager(self.con, workspace, self.options)
+            elif command == "nop swlm layout Autotiling":
+                self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
+            else:
+                shortName = command.split(' ')[-1]
+                layoutName = self.getLayoutNameByShortName(shortName)
+                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
+
             self.log("Created %s on workspace %d" % (self.managers[workspace.num].shortName, workspace.num))
             return
 
@@ -345,6 +347,10 @@ class SWLM:
                 except ImportError:
                     self.log("Layout not found: " + name)
 
+    def getLayoutNameByShortName(self, shortName):
+        for name in self.userLayouts:
+            if getattr(self.userLayouts[name], name).shortName == shortName:
+                return name
 
     def setWorkspaceLayoutManager(self, workspace):
         # Check if we should manage workspace
@@ -364,11 +370,9 @@ class SWLM:
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
             else:
                 # If the layout isn't prebundled, search user layours
-                for name in self.userLayouts:
-                    if getattr(self.userLayouts[name], name).shortName == layoutName:
-                        self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
-                        self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
-                        break
+                name = self.getLayoutNameByShortName(layoutName)
+                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
+                self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
 
         if workspace.num not in self.workspaceWindows:
             self.workspaceWindows[workspace.num] = []
