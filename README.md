@@ -17,9 +17,6 @@ Options:
 ```
 
 ### TODO
-- [ ] Improve configuration
-  - [ ] Load custom WorkspaceLayoutManagers from config path
-  - [ ] Reload config without restarting swlm
 - [ ] More Layouts!
 - [ ] MasterStack:
   - [ ] Maintain user-set window sizes for each wndow position
@@ -41,6 +38,10 @@ the values set in the `[swlm]` table for that output or workspace. Note, values 
 to workspaces **created** on that output. For an example configuration, see the `config.toml` file in the root of this
 repo.
 
+The user configuration can be reloaded at runtime with `nop swlm reload`. This can be run through swaymsg, or set as a
+bindsym. Note that this reloads the config, but not any layout managers. If one of your config changes affects a specific
+workspace that is already active, you will need to reload the layout manager with `nop swlm layout <layout short name>`.
+
 ## Layout Managers
 
 The layout manager controlling a workspace can be dynamically changed using the command `nop swlm layout <LAYOUT>`. In
@@ -54,6 +55,9 @@ bindsym $mod+Shift+Down nop swlm move down
 bindsym $mod+Shift+Up nop swlm move up
 bindsym $mod+Shift+Right nop swlm move right
 ```
+
+Layout managers are designed to have a simple interface to streamline making your own. See the User Created	Layouts
+section below for more info on making a layout manager.
 
 ### none
 
@@ -122,3 +126,12 @@ bindym <your bind here> nop swlm move up # move focused winodw up 1 position in 
 bindym <your bind here> nop swlm move down # move focused window down one position in the stack
 bindym <your bind here> nop swlm stack toggle # toggles stack layout through splitv, tabbed, and stacking
 ```
+
+### User Created Layouts
+
+You can create layouts that get picked up and managed by swlm without modifying swlm itself. Any python file placed
+in the same directory as the config file will be automatically imported by swlm at startup, and any time the
+configuration is reloaded. To get started writing your own layouts, take a look at `src/maangers/WorkspaceLayoutMaanger.py`
+in this repo. This is the base class from which your layout must inherit, and provides a number of hooks and functions
+for handling window events. `src/managers/AutotilingLayoutManager.py` is a simple example of how to implement a WLM.
+When making a WLM, make sure that it has a unique shortname.
