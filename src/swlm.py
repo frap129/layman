@@ -22,6 +22,7 @@ import inspect
 import logging
 import os
 from setproctitle import setproctitle
+import shutil
 
 import utils
 import config
@@ -369,13 +370,23 @@ class SWLM:
                 self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
             else:
-                # If the layout isn't prebundled, search user layours
+                # If the layout isn't prebundled, search user layouts
                 name = self.getLayoutNameByShortName(layoutName)
                 self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
 
         if workspace.num not in self.workspaceWindows:
             self.workspaceWindows[workspace.num] = []
+
+    
+    def createConfig():
+        configPath = utils.getConfigPath()
+        if not os.path.exists(configPath):
+            if os.path.exists(os.path.dirname(configPath)):
+                shutil.copyfile(os.path.join(os.path.dirname(__file__), 'config.toml'), configPath)            
+            else:
+                self.logCaller("Path to user config does not exts: %s" % configPath)
+                exit()
 
 
     def log(self, msg):
