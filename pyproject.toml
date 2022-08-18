@@ -2,10 +2,16 @@
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools.package-dir]
+swlm = "src"
+
+[tool.setuptools.package-data]
+swlm = ["config.toml"]
+
 [project]
 name = "swlm"
 version = "0.1.0"
-description = "A package created with a setuptools tutorial.  See article link for more details."
+description = "A daemon that handles sway/i3 layout management on a per-workspace basis"
 readme = "README.md"
 license = {text = "GPL v3"}
 dependencies = [
