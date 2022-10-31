@@ -13,7 +13,7 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-swlm. If not, see <https://www.gnu.org/licenses/>. 
+swlm. If not, see <https://www.gnu.org/licenses/>.
 """
 from collections import deque
 
@@ -22,6 +22,7 @@ import utils
 
 KEY_MASTER_WIDTH = "masterWidth"
 KEY_STACK_LAYOUT = "stackLayout"
+
 
 class MasterStackLayoutManager(WorkspaceLayoutManager):
     shortName = "MasterStack"
@@ -43,7 +44,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Ignore excluded windows
         if self.isExcluded(window):
             return
-        
+
         # New window replaces master, master gets pushed to stack
         self.log("Added window id: %d" % window.id)
         self.pushWindow(window.id)
@@ -57,7 +58,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             # If window is not master, remove from stack and exist
             try:
                 self.stackIds.remove(window.id)
-            except BaseException as e:
+            except BaseException:
                 # This should only happen if an untracked window was closed
                 self.log("WTF: window not master or in stack")
 
@@ -81,7 +82,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.moveDown()
         elif command == "nop swlm rotate ccw" or command == "nop swlm move left":
             self.rotateCCW()
-        elif command == "nop swlm rotate cw"or command == "nop swlm move right":
+        elif command == "nop swlm rotate cw" or command == "nop swlm move right":
             self.rotateCW()
         elif command == "nop swlm swap master":
             self.swapMaster()
@@ -128,6 +129,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.masterId == 0:
             self.log("Made window %d master" % windowId)
             self.masterId = windowId
+            self.setStackLayout()
             return
 
         # Check if we need to initialize the stack
@@ -154,7 +156,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.moveWindow(windowId, self.stackConId)
         if not self.stackLayout or self.stackLayout == "splitv":
             self.con.command("[con_id=%s] focus" % windowId)
-            for i in range(len(self.stackIds)):
+            for i in range(len(self.stackIds) - 1):
                 self.con.command("move up")
 
         # Swap with master
@@ -353,7 +355,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if len(self.stackIds) == 0:
             self.log("Stack emtpy, can't swap")
             return
-            
+
         focusedWindow = utils.findFocusedWindow(self.con)
 
         if focusedWindow is None:
@@ -374,7 +376,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             if self.stackIds[i] == focusedWindow.id:
                 # Swap window with master
                 self.con.command("[con_id=%d] swap container with con_id %d" % (focusedWindow.id, self.masterId))
-
 
                 # Update record
                 self.stackIds[i] = self.masterId
