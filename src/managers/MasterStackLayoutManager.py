@@ -188,8 +188,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.con.command("[con_id=%s] swap container with con_id %s" % (self.stackConId, self.masterId))
                 self.con.command("[con_id=%s] focus" % self.masterId)
 
-            self.setMasterWidth()
-
         self.log("Moved top of stack to master")
 
 
