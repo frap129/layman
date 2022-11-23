@@ -156,7 +156,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.moveWindow(windowId, self.stackConId)
         if not self.stackLayout or self.stackLayout == "splitv":
             self.con.command("[con_id=%s] focus" % windowId)
-            for i in range(len(self.stackIds) - 1):
+            for i in range(len(self.stackIds)):
                 self.con.command("move up")
 
         # Swap with master
