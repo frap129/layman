@@ -346,7 +346,7 @@ class SWLM:
                     package = imp.load_module(className, fp, path, desc)
                     self.userLayouts[className] = package
                 except ImportError:
-                    self.log("Layout not found: " + name)
+                    self.log("Layout not found: " + className)
 
     def getLayoutNameByShortName(self, shortName):
         for name in self.userLayouts:
@@ -379,7 +379,7 @@ class SWLM:
             self.workspaceWindows[workspace.num] = []
 
     
-    def createConfig():
+    def createConfig(self):
         configPath = utils.getConfigPath()
         if not os.path.exists(configPath):
             if os.path.exists(os.path.dirname(configPath)):
@@ -446,7 +446,7 @@ class SWLM:
             print("restarting after exception:")
             logging.exception(e)
             self.eventCon.main_quit()
-            self.eventCon.off()
+            self.eventCon.off(self.onEvent)
             self.init()
 
 
