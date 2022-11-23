@@ -17,7 +17,6 @@ You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
-import utils
 
 # AutolingLayoutManager, adapted from nwg-piotr's autotiling script
 class AutotilingLayoutManager(WorkspaceLayoutManager):
@@ -59,7 +58,7 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
             result = self.con.command(newLayout)
             if result[0].success:
                 self.log("Switched to %s" % newLayout)
-            elif debug:
+            elif self.debug:
                 self.log("Error: Switch failed with err {}".format(result[0].error))
 
 

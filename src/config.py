@@ -18,7 +18,6 @@ swlm. If not, see <https://www.gnu.org/licenses/>.
 import tomli
 from logging import exception
 
-from utils import SimpleDict
 
 CONFIG_PATH = ".config/swlm/config.toml"
 
@@ -71,7 +70,7 @@ class SWLMConfig():
             if output:
                 try:
                     self.configDict[TABLE_OUTPUT][output][key]
-                except KeyError as e:
+                except KeyError:
                     pass
 
             # If output config doesn't have the key, falback to default
