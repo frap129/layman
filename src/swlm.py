@@ -50,7 +50,7 @@ class SWLM:
     """
 
     def windowCreated(self, event):
-        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.cmdCon)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(self.focusedWorkspace):
@@ -63,7 +63,7 @@ class SWLM:
             self.setWorkspaceLayoutManager(self.focusedWorkspace)
 
         # Store window
-        self.focusedWindow = utils.findFocusedWindow(self.con)
+        self.focusedWindow = utils.findFocusedWindow(self.cmdCon)
         if self.focusedWindow is not None:
             self.workspaceWindows[self.focusedWorkspace.num].append(self.focusedWindow.id)
 
@@ -73,8 +73,8 @@ class SWLM:
 
 
     def windowFocused(self, event):
-        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
-        self.focusedWindow = utils.findFocusedWindow(self.con)
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.cmdCon)
+        self.focusedWindow = utils.findFocusedWindow(self.cmdCon)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(self.focusedWorkspace):
@@ -96,7 +96,7 @@ class SWLM:
 
         # Fallback to focused workspace if the window wasn't tracked
         if workspaceNum is None:
-            workspaceNum = utils.findFocusedWorkspace(self.con).num
+            workspaceNum = utils.findFocusedWorkspace(self.cmdCon).num
 
         # Remove window
         try:
@@ -110,7 +110,7 @@ class SWLM:
 
 
     def windowMoved(self, event):
-        window = utils.findFocusedWindow(self.con)
+        window = utils.findFocusedWindow(self.cmdCon)
         workspace = window.workspace()
 
         if window.id in self.workspaceWindows[self.focusedWorkspace.num]:
@@ -139,8 +139,8 @@ class SWLM:
 
 
     def windowFloating(self, event):
-        self.focusedWorkspace = utils.findFocusedWorkspace(self.con)
-        self.focusedWindow = utils.findFocusedWindow(self.con)
+        self.focusedWindow = utils.findFocusedWindow(self.cmdCon)
+        self.focusedWorkspace = self.focusedWindow.workspace()
 
         # Check if we should pass this call to a manager
         if self.isExcluded(self.focusedWorkspace):
@@ -180,7 +180,7 @@ class SWLM:
     """
 
     def workspaceInit(self, event):
-        self.focusedWorkspace = event.current
+        self.focusedWorkspace = utils.findFocusedWorkspace(self.cmdCon)
         self.setWorkspaceLayoutManager(self.focusedWorkspace)
 
 
@@ -189,11 +189,11 @@ class SWLM:
         if event.old == None or event.current.num == event.old.num:
             return
 
-        window = utils.findFocusedWindow(self.con)
+        window = utils.findFocusedWindow(self.cmdCon)
         if self.focusedWindow != None and window.id != self.focusedWindow.id:
             #  Exit early if all we did was focus a new window
             self.focusedWindow = window
-            self.focusedWorkspace = event.current
+            self.focusedWorkspace = window.workspace() 
             return
 
         # Check if window has changed workspaces
@@ -212,7 +212,7 @@ class SWLM:
                 self.managers[event.current.num].windowAdded(event, window)
 
         self.focusedWindow = window
-        self.focusedWorkspace = event.current
+        self.focusedWorkspace = window.workspace()
 
 
     """
@@ -229,7 +229,7 @@ class SWLM:
             return
             
         # Check if we should pass this call to a manager
-        workspace = utils.findFocusedWorkspace(self.con)
+        workspace = utils.findFocusedWorkspace(self.cmdCon)
         if self.isExcluded(workspace):
             self.log("Workspace or output excluded")
             return
@@ -241,14 +241,14 @@ class SWLM:
             return
         elif "nop swlm move " in  command:
             moveCmd = command.replace("nop swlm ", '')
-            self.con.command(moveCmd)
+            self.cmdCon.command(moveCmd)
             self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
             return
 
         # Handle reload command
         if command == "nop swlm reload":
             # Get user config options
-            self.options = config.SWLMConfig(self.con, utils.getConfigPath())
+            self.options = config.SWLMConfig(self.cmdCon, utils.getConfigPath())
             self.fetchLayouts()
             self.log("Reloaded swlm config")
             return
@@ -257,15 +257,15 @@ class SWLM:
         if "nop swlm layout " in command:
             if command == "nop swlm layout none":
                 # Create no-op WLM to prevent onWorkspace from overwriting
-                self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
+                self.managers[workspace.num] = WorkspaceLayoutManager(self.cmdCon, workspace, self.options)
             elif command == "nop swlm layout MasterStack":
-                self.managers[workspace.num] = MasterStackLayoutManager(self.con, workspace, self.options)
+                self.managers[workspace.num] = MasterStackLayoutManager(self.cmdCon, workspace, self.options)
             elif command == "nop swlm layout Autotiling":
-                self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
+                self.managers[workspace.num] = AutotilingLayoutManager(self.cmdCon, workspace, self.options)
             else:
                 shortName = command.split(' ')[-1]
                 layoutName = self.getLayoutNameByShortName(shortName)
-                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
+                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
 
             self.log("Created %s on workspace %d" % (self.managers[workspace.num].shortName, workspace.num))
             return
@@ -361,18 +361,18 @@ class SWLM:
         layoutName = self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT)
         if workspace.num not in self.managers:
             if layoutName == AutotilingLayoutManager.shortName:
-                self.managers[workspace.num] = AutotilingLayoutManager(self.con, workspace, self.options)
+                self.managers[workspace.num] = AutotilingLayoutManager(self.cmdCon, workspace, self.options)
                 self.logCaller("Initialized workspace %d with %s" % (workspace.num, self.managers[workspace.num].shortName))
             elif layoutName == MasterStackLayoutManager.shortName:
-                self.managers[workspace.num] = MasterStackLayoutManager(self.con, workspace, self.options)
+                self.managers[workspace.num] = MasterStackLayoutManager(self.cmdCon, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
             elif layoutName == WorkspaceLayoutManager.shortName:
-                self.managers[workspace.num] = WorkspaceLayoutManager(self.con, workspace, self.options)
+                self.managers[workspace.num] = WorkspaceLayoutManager(self.cmdCon, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
             else:
                 # If the layout isn't prebundled, search user layouts
                 name = self.getLayoutNameByShortName(layoutName)
-                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.con, workspace, self.options)
+                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
                 self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
 
         if workspace.num not in self.workspaceWindows:
@@ -414,18 +414,19 @@ class SWLM:
 
     def init(self):
         # Set event callbacks
-        self.con = Connection()
-        self.con.on(Event.BINDING, self.onEvent)
-        self.con.on(Event.WINDOW_FOCUS, self.onEvent)
-        self.con.on(Event.WINDOW_NEW, self.onEvent)
-        self.con.on(Event.WINDOW_CLOSE, self.onEvent)
-        self.con.on(Event.WINDOW_MOVE, self.onEvent)
-        self.con.on(Event.WINDOW_FLOATING, self.onEvent)
-        self.con.on(Event.WORKSPACE_INIT, self.onEvent)
-        self.con.on(Event.WORKSPACE_FOCUS, self.onEvent)
+        self.eventCon = Connection()
+        self.eventCon.on(Event.BINDING, self.onEvent)
+        self.eventCon.on(Event.WINDOW_FOCUS, self.onEvent)
+        self.eventCon.on(Event.WINDOW_NEW, self.onEvent)
+        self.eventCon.on(Event.WINDOW_CLOSE, self.onEvent)
+        self.eventCon.on(Event.WINDOW_MOVE, self.onEvent)
+        self.eventCon.on(Event.WINDOW_FLOATING, self.onEvent)
+        self.eventCon.on(Event.WORKSPACE_INIT, self.onEvent)
+        self.eventCon.on(Event.WORKSPACE_FOCUS, self.onEvent)
 
         # Get user config options
-        self.options = config.SWLMConfig(self.con, utils.getConfigPath())
+        self.cmdCon = Connection()
+        self.options = config.SWLMConfig(self.cmdCon, utils.getConfigPath())
         self.fetchLayouts()
 
         # Register event queue listener
@@ -434,16 +435,18 @@ class SWLM:
 
         # Set default layout maangers
         if self.options.getDefault(config.KEY_LAYOUT):
-            for workspace in self.con.get_workspaces():
+            for workspace in self.cmdCon.get_workspaces():
                 self.setWorkspaceLayoutManager(workspace)
                 self.workspaceWindows[workspace.num] = []
 
-        # Start i3ipc connection
+        # Start handling events
         try:
-            self.con.main()
+            self.eventCon.main()
         except BaseException as e:
             print("restarting after exception:")
             logging.exception(e)
+            self.eventCon.main_quit()
+            self.eventCon.off()
             self.init()
 
 
