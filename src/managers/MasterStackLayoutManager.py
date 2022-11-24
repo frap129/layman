@@ -150,6 +150,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.con.command("[con_id=%s] focus" % prevMasterId)
             self.con.command("focus parent")
             self.stackConId = utils.findFocusedWindow(self.con).id
+
+            # Refocus Master
+            self.con.command("[con_id=%s] focus" % windowId)
             return
 
         # Put new window at top of stack
@@ -164,8 +167,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.con.command("[con_id=%s] swap container with con_id %s" % (windowId, prevMasterId))
         self.stackIds.append(self.masterId)
         self.masterId = windowId
-        self.setMasterWidth()
-        self.con.command("[con_id=%s] focus" % self.masterId)
+        self.con.command("[con_id=%s] focus" % windowId)
 
 
     def popWindow(self):
