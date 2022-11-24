@@ -50,6 +50,9 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
         if window.parent.layout == "tabbed":
             return True
 
+        if window.parent.layout != window.layout and len(window.parent.nodes) <= 1:
+            return True
+
         return False
 
     def switchSplit(self, window):
