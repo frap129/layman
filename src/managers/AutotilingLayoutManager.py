@@ -18,12 +18,15 @@ swlm. If not, see <https://www.gnu.org/licenses/>.
 """
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
 
+KEY_DEPTH_LIMIT = "depthLimit"
+
 # AutolingLayoutManager, adapted from nwg-piotr's autotiling script
 class AutotilingLayoutManager(WorkspaceLayoutManager):
     shortName = "Autotiling"
 
     def __init__(self, con, workspace, options):
         super().__init__(con, workspace, options)
+        self.depthLimit = options.getForWorkspace(self.workspaceNum, KEY_DEPTH_LIMIT) or 0
 
     def isExcluded(self, window):
         if window is None:
@@ -52,6 +55,25 @@ class AutotilingLayoutManager(WorkspaceLayoutManager):
     def switchSplit(self, window):
         if self.isExcluded(window):
             return
+
+        # Check if we've hit the depth limit before splitting
+        if self.depthLimit:
+            windowParent = window
+            depth = 0
+            while depth <= self.depthLimit:
+                if windowParent.type != "workspace":
+                    # Exit when depth limit is reached
+                    if depth == self.depthLimit:
+                        return
+
+                    windowParent = windowParent.parent
+
+                    # Only count depth of containers with more than 1 child
+                    if len(windowParent.nodes) > 1:
+                        depth += 1
+                else:
+                    # Top of workspace reached, continue to split
+                    break
 
         newLayout = "splitv" if window.rect.height > window.rect.width else "splith"
         if newLayout != window.parent.layout:

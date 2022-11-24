@@ -22,7 +22,6 @@ Options:
 - [ ] MasterStack:
   - [ ] Maintain user-set window sizes for each wndow position
   - [ ] Automatically arrange pre-existing windows into correct layout
-  - [ ] Fix rotation
 
 ## Installation
 
@@ -81,6 +80,7 @@ the `Autotiling` layout manager alternates between splith and splitv based on a 
 Config options:
 ```
 debug: Boolean to control debug messages
+depthLimit: Max number of nested splits [0 means no limit]
 ```
 
 Binding:
