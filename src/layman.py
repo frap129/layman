@@ -289,19 +289,8 @@ class Layman:
     """
 
     def onEvent(self, con, event):
-        # Set item priority
-        priority = 3
-        if type(event) == WorkspaceEvent and event.change == "init":
-            priority = 0
-        elif type(event) == WorkspaceEvent and event.change == "focus":
-            priority = 1
-        elif type(event) == BindingEvent:
-            priority = 2
-        elif type(event) == WindowEvent and event.change == "move":
-            priority = 4
-
         try:
-            self.eventQueue.put(utils.EventItem(priority, event))
+            self.eventQueue.put(utils.EventItem(event))
         except TypeError as e:
             logging.exception(e)
 
