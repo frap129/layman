@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License along with
 swlm. If not, see <https://www.gnu.org/licenses/>. 
 """
 from i3ipc import Event, Connection, BindingEvent, WorkspaceEvent, WindowEvent
-import imp
+from importlib.machinery import SourceFileLoader
 import inspect
 import logging
 import os
@@ -342,16 +342,17 @@ class SWLM:
                 # Assume all python files in the config path are layouts, load them
                 className = os.path.splitext(file)[0]
                 try:
-                    fp, path, desc = imp.find_module(className, [layoutPath])
-                    package = imp.load_module(className, fp, path, desc)
-                    self.userLayouts[className] = package
+                    module = SourceFileLoader(className, layoutPath + "/" + file).load_module()
+                    self.userLayouts[className] = module
                 except ImportError:
                     self.log("Layout not found: " + className)
+
 
     def getLayoutNameByShortName(self, shortName):
         for name in self.userLayouts:
             if getattr(self.userLayouts[name], name).shortName == shortName:
                 return name
+
 
     def setWorkspaceLayoutManager(self, workspace):
         # Check if we should manage workspace
