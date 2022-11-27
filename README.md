@@ -17,16 +17,22 @@ Options:
                                Path to user config file.
 ```
 
-### TODO
-- [ ] More Layouts!
-- [ ] MasterStack:
-  - [ ] Maintain user-set window sizes for each wndow position
-  - [ ] Automatically arrange pre-existing windows into correct layout
-
 ## Installation
 
-Because layman is still early in development, I haven't come up with a way to package it yet. For now, clone this
-repositiory and symlink `layman.py` to `~/.local/bin/layman` or any directoy in your PATH.
+I intend to provide installation through PyPi using pip, however the original name of this project `swlm` was forbidden for
+being too similar to another package, swmm. After rebranding to `layman`, the name is still forbidden for an unkown reason.
+Until this is resolved, please use the instructions below.
+
+## Installing from source
+
+layman uses setuptools for packaging. Open a terminal and clone this repository. This following step is entirely optional,
+as once the source is cloned you can run src/layman.py directly. If you would like to be able to call `layman` from anywhere,
+run
+```
+pip install ~/path/to/layman
+
+```
+to package and install layman.
 
 ## Configuration
 
@@ -104,7 +110,7 @@ becomes the new master.
 `MasterStack` provides overrides for `move <directon>` binds. 
 
 Known bugs:
--  Rotation got broked
+-  When arranging an existing layout, the master/stack containers are not initialized correctly.
 -  Sometimes existing windows get missed when arranging an existing layout
 
 Config options:
