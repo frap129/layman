@@ -1,4 +1,4 @@
-# layman - Sway Workspace Layout Manager
+# layman
 
 layman is a daemon that handles layout management on a per-workspace basis. Each `WorkspaceLayoutManager` (WLM) is
 responsible for managing all of the tiling windows on a given workspace. The `mananagers/` directoy contains files
