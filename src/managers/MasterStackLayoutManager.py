@@ -320,6 +320,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("swapped top of stack with master")
         self.moveWindow(prevMasterId, bottomId)
         self.log("Moved previous master to bottom of stack")
+        self.con.command("[con_id=%d] focus" % newMasterId)
 
         # Update record
         self.masterId = newMasterId
