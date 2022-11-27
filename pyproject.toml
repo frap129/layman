@@ -3,13 +3,13 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-dir]
-swlm = "src"
+layman = "src"
 
 [tool.setuptools.package-data]
-swlm = ["config.toml"]
+layman = ["config.toml"]
 
 [project]
-name = "swlm"
+name = "layman"
 version = "0.1.0"
 description = "A daemon that handles sway/i3 layout management on a per-workspace basis"
 readme = "README.md"
@@ -21,4 +21,4 @@ dependencies = [
 ]
 
 [project.scripts]
-swlm = "swlm.__main__:main"
+layman = "layman.__main__:main"
