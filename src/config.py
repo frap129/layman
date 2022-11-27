@@ -1,27 +1,27 @@
 """
 Copyright 2022 Joe Maples <joe@maples.dev>
 
-This file is part of swlm.
+This file is part of layman.
 
-swlm is free software: you can redistribute it and/or modify it under the
+layman is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-swlm is distributed in the hope that it will be useful, but WITHOUT ANY
+layman is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-swlm. If not, see <https://www.gnu.org/licenses/>. 
+layman. If not, see <https://www.gnu.org/licenses/>. 
 """
 import tomli
 from logging import exception
 
 
-CONFIG_PATH = ".config/swlm/config.toml"
+CONFIG_PATH = ".config/layman/config.toml"
 
-TABLE_SWLM = "swlm"
+TABLE_LAYMAN = "layman"
 TABLE_WORKSPACE = "workspace"
 TABLE_OUTPUT = "output"
 KEY_DEBUG = "debug"
@@ -30,7 +30,7 @@ KEY_EXCLUDED_OUTPUTS = "excludeOutputs"
 KEY_LAYOUT = "defaultLayout"
 
 
-class SWLMConfig():
+class LaymanConfig():
     def __init__(self, con, configPath):
         self.reloadConfig(con, configPath)
 
@@ -52,7 +52,7 @@ class SWLMConfig():
 
     def getDefault(self, key):
         try:
-            return self.configDict[TABLE_SWLM][key]
+            return self.configDict[TABLE_LAYMAN][key]
         except KeyError:
             return None
 
@@ -75,7 +75,7 @@ class SWLMConfig():
 
             # If output config doesn't have the key, falback to default
             try:
-                value = self.configDict[TABLE_SWLM][key]
+                value = self.configDict[TABLE_LAYMAN][key]
             except KeyError:
                 value = None
 

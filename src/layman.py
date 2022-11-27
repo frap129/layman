@@ -2,19 +2,19 @@
 """
 Copyright 2022 Joe Maples <joe@maples.dev>
 
-This file is part of swlm.
+This file is part of layman.
 
-swlm is free software: you can redistribute it and/or modify it under the
+layman is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-swlm is distributed in the hope that it will be useful, but WITHOUT ANY
+layman is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-swlm. If not, see <https://www.gnu.org/licenses/>. 
+layman. If not, see <https://www.gnu.org/licenses/>. 
 """
 from i3ipc import Event, Connection, BindingEvent, WorkspaceEvent, WindowEvent
 from importlib.machinery import SourceFileLoader
@@ -31,7 +31,7 @@ from managers.MasterStackLayoutManager import MasterStackLayoutManager
 from managers.AutotilingLayoutManager import AutotilingLayoutManager
 
 
-class SWLM:
+class Layman:
     def __init__(self):
         self.managers = utils.SimpleDict()
         self.workspaceWindows = utils.SimpleDict()
@@ -39,7 +39,7 @@ class SWLM:
         self.focusedWorkspace = None
         self.eventQueue = utils.EventQueue()
         self.userLayouts = utils.SimpleDict()
-        setproctitle("swlm")
+        setproctitle("layman")
 
 
     """
@@ -225,7 +225,7 @@ class SWLM:
     def onBinding(self, event):
         # Exit early if binding isnt for slwm
         command = event.ipc_data["binding"]["command"].strip()
-        if "nop swlm" not in command:
+        if "nop layman" not in command:
             return
             
         # Check if we should pass this call to a manager
@@ -235,32 +235,32 @@ class SWLM:
             return
 
         # Handle movement commands
-        if "nop swlm move" in command and self.managers[workspace.num].overridesMoveBinds:
+        if "nop layman move" in command and self.managers[workspace.num].overridesMoveBinds:
             self.managers[workspace.num].onBinding(command)
             self.log("Passed bind to manager on workspace %d" % workspace.num)
             return
-        elif "nop swlm move " in  command:
-            moveCmd = command.replace("nop swlm ", '')
+        elif "nop layman move " in  command:
+            moveCmd = command.replace("nop layman ", '')
             self.cmdCon.command(moveCmd)
             self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
             return
 
         # Handle reload command
-        if command == "nop swlm reload":
+        if command == "nop layman reload":
             # Get user config options
-            self.options = config.SWLMConfig(self.cmdCon, utils.getConfigPath())
+            self.options = config.LaymanConfig(self.cmdCon, utils.getConfigPath())
             self.fetchLayouts()
-            self.log("Reloaded swlm config")
+            self.log("Reloaded layman config")
             return
 
         # Handle wlm creation commands
-        if "nop swlm layout " in command:
-            if command == "nop swlm layout none":
+        if "nop layman layout " in command:
+            if command == "nop layman layout none":
                 # Create no-op WLM to prevent onWorkspace from overwriting
                 self.managers[workspace.num] = WorkspaceLayoutManager(self.cmdCon, workspace, self.options)
-            elif command == "nop swlm layout MasterStack":
+            elif command == "nop layman layout MasterStack":
                 self.managers[workspace.num] = MasterStackLayoutManager(self.cmdCon, workspace, self.options)
-            elif command == "nop swlm layout Autotiling":
+            elif command == "nop layman layout Autotiling":
                 self.managers[workspace.num] = AutotilingLayoutManager(self.cmdCon, workspace, self.options)
             else:
                 shortName = command.split(' ')[-1]
@@ -427,12 +427,12 @@ class SWLM:
 
         # Get user config options
         self.cmdCon = Connection()
-        self.options = config.SWLMConfig(self.cmdCon, utils.getConfigPath())
+        self.options = config.LaymanConfig(self.cmdCon, utils.getConfigPath())
         self.fetchLayouts()
 
         # Register event queue listener
         self.eventQueue.registerListener(self.onEventAddedToQueue)
-        self.log("swlm started")
+        self.log("layman started")
 
         # Set default layout maangers
         if self.options.getDefault(config.KEY_LAYOUT):
@@ -451,6 +451,6 @@ class SWLM:
             self.init()
 
 
-# Start swlm
-swlm = SWLM()
-swlm.init()
+# Start layman
+layman = Layman()
+layman.init()

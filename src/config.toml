@@ -1,9 +1,9 @@
 # This is an example config file that only sets the default values for each value.
 # Configure your own desired options before using
 
-# The `swlm` section configures options that apply to the swlm daemon, and any fallback
+# The `layman` section configures options that apply to the layman daemon, and any fallback
 # values for options not set in a [workspace] or [output] section.
-[swlm]
+[layman]
 defaultLayout = "none"	# The default WLM to assign to a workspace
 excludedWorkspaces = []	# Numbers of workspaces to be excuded
 excludedOutputs = []	# Names of outputs to be excuded

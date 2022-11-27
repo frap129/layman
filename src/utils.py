@@ -1,19 +1,19 @@
 """
 Copyright 2022 Joe Maples <joe@maples.dev>
 
-This file is part of swlm.
+This file is part of layman.
 
-swlm is free software: you can redistribute it and/or modify it under the
+layman is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-swlm is distributed in the hope that it will be useful, but WITHOUT ANY
+layman is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-swlm. If not, see <https://www.gnu.org/licenses/>. 
+layman. If not, see <https://www.gnu.org/licenses/>. 
 """
 
 from dataclasses import dataclass, field
@@ -100,11 +100,11 @@ def getConfigPath():
                       type="string",
                       action="callback",
                       callback=getCommaSeparatedArgs,
-                      metavar=".config/swlm/config.toml",
+                      metavar=".config/layman/config.toml",
                       help="Path to user config file.")
 
     try:
         path = parser.parse_args()[0].configPath[0]
     except:
-        path = ".config/swlm/config.toml"
+        path = ".config/layman/config.toml"
     return path

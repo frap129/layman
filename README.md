@@ -1,6 +1,6 @@
-# swlm - Sway Workspace Layout Manager
+# layman - Sway Workspace Layout Manager
 
-swlm is a daemon that handles layout management on a per-workspace basis. Each `WorkspaceLayoutManager` (WLM) is
+layman is a daemon that handles layout management on a per-workspace basis. Each `WorkspaceLayoutManager` (WLM) is
 responsible for managing all of the tiling windows on a given workspace. The `mananagers/` directoy contains files
 that each hold an implementation of a WLM, with `WorkspaceLayoutManager.py` containing the parent class from which
 all WLMs are derived.
@@ -9,11 +9,11 @@ WLMs are intended to have a simpler set of events than those provided though i3i
 to a single workspace. See the User Created Layouts section for how to add a new layout.
 
 ```
-Usage: swlm.py [options]
+Usage: layman.py [options]
 
 Options:
   -h, --help                   show this help message and exit
-  -c .config/swlm/config.toml, --config=.config/swlm/config.toml
+  -c .config/layman/config.toml, --config=.config/layman/config.toml
                                Path to user config file.
 ```
 
@@ -25,36 +25,36 @@ Options:
 
 ## Installation
 
-Because swlm is still early in development, I haven't come up with a way to package it yet. For now, clone this
-repositiory and symlink `swlm.py` to `~/.local/bin/swlm` or any directoy in your PATH.
+Because layman is still early in development, I haven't come up with a way to package it yet. For now, clone this
+repositiory and symlink `layman.py` to `~/.local/bin/layman` or any directoy in your PATH.
 
 ## Configuration
 
-swlm is configured using the config file at `$HOME/.config/swlm/config.toml` using TOML. The `[swlm]` table configures
-options for the swlm daemon, and defaults options for all outputs and workspaces. Specific outputs and workspaces can
+layman is configured using the config file at `$HOME/.config/layman/config.toml` using TOML. The `[layman]` table configures
+options for the layman daemon, and defaults options for all outputs and workspaces. Specific outputs and workspaces can
 be configured using `[output.VALUE]` or `[workspace.VALUE]` header, where `VALUE` is either the name of the output, or
-the number of the workspace being configured. Any options configured will override the values set in the `[swlm]` table
+the number of the workspace being configured. Any options configured will override the values set in the `[layman]` table
 for that output or workspace.
 
 Note, values configured for outputs will only apply to workspaces **created** on that output. For an example configuration,
 see the `config.toml` file in the root of this repo.
 
-The user configuration can be reloaded at runtime with `nop swlm reload`. This can be run through swaymsg, or set as a
+The user configuration can be reloaded at runtime with `nop layman reload`. This can be run through swaymsg, or set as a
 bindsym. Note that this reloads the config, but not any layout managers. If one of your config changes affects a specific
-workspace that is already active, you will need to reload the layout manager with `nop swlm layout <layout short name>`.
+workspace that is already active, you will need to reload the layout manager with `nop layman layout <layout short name>`.
 
 ## Layout Managers
 
-The layout manager controlling a workspace can be changed using the command `nop swlm layout <LAYOUT>`. In order to
+The layout manager controlling a workspace can be changed using the command `nop layman layout <LAYOUT>`. In order to
 handle window movement in layouts that don't use standard up/down/left/right, a WLM can override these commands with better
-defaults, and swlm will fall back the regular command for WLMs that don't. To use the WLM provided movement commands,
+defaults, and layman will fall back the regular command for WLMs that don't. To use the WLM provided movement commands,
 replace your `move <direction>` bindsyms with
 ```
 # Override move binds
-bindsym $mod+Shift+Left nop swlm move left
-bindsym $mod+Shift+Down nop swlm move down
-bindsym $mod+Shift+Up nop swlm move up
-bindsym $mod+Shift+Right nop swlm move right
+bindsym $mod+Shift+Left nop layman move left
+bindsym $mod+Shift+Down nop layman move down
+bindsym $mod+Shift+Up nop layman move up
+bindsym $mod+Shift+Right nop layman move right
 ```
 ### none
 
@@ -68,7 +68,7 @@ debug: Boolean to control debug messages
 
 Binding:
 ```
-bindym <your bind here> nop swlm layout none # disable layout management on a workspace
+bindym <your bind here> nop layman layout none # disable layout management on a workspace
 ```
 
 ### Autotiling
@@ -85,7 +85,7 @@ depthLimit: Max number of nested splits [0 means no limit]
 
 Binding:
 ```
-bindym <your bind here> nop swlm layout Autotiling # set focused workspace's layout manager to Autotiling
+bindym <your bind here> nop layman layout Autotiling # set focused workspace's layout manager to Autotiling
 ```
 
 ### MasterStack
@@ -116,19 +116,19 @@ stackLayout: String to control the layout of the stack ["splitv", "tabbed", "sta
 
 Bindings:
 ```
-bindym <your bind here> nop swlm layout MasterStack # set focused workspace's layout manager to MasterStack
-bindym <your bind here> nop swlm swap master # swap focused window with master
-bindym <your bind here> nop swlm rotate cw # rotate layout cw 1 window
-bindym <your bind here> nop swlm rotate ccw # rotate layout ccw 1 window
-bindym <your bind here> nop swlm move up # move focused winodw up 1 position in the stack
-bindym <your bind here> nop swlm move down # move focused window down one position in the stack
-bindym <your bind here> nop swlm stack toggle # toggles stack layout through splitv, tabbed, and stacking
+bindym <your bind here> nop layman layout MasterStack # set focused workspace's layout manager to MasterStack
+bindym <your bind here> nop layman swap master # swap focused window with master
+bindym <your bind here> nop layman rotate cw # rotate layout cw 1 window
+bindym <your bind here> nop layman rotate ccw # rotate layout ccw 1 window
+bindym <your bind here> nop layman move up # move focused winodw up 1 position in the stack
+bindym <your bind here> nop layman move down # move focused window down one position in the stack
+bindym <your bind here> nop layman stack toggle # toggles stack layout through splitv, tabbed, and stacking
 ```
 
 ### User Created Layouts
 
-You can create layouts that get picked up and managed by swlm without modifying swlm itself. Any python file placed
-in the same directory as the config file will be automatically imported by swlm at startup, and any time the
+You can create layouts that get picked up and managed by layman without modifying layman itself. Any python file placed
+in the same directory as the config file will be automatically imported by layman at startup, and any time the
 configuration is reloaded. To get started writing your own layouts, take a look at `src/mangers/WorkspaceLayoutManger.py`
 in this repo. This is the base class from which your layout must inherit, and provides a number of hooks and functions
 for handling window events. `src/managers/AutotilingLayoutManager.py` is a simple example of how to implement a WLM.

@@ -1,19 +1,19 @@
 """
 Copyright 2022 Joe Maples <joe@maples.dev>
 
-This file is part of swlm.
+This file is part of layman.
 
-swlm is free software: you can redistribute it and/or modify it under the
+layman is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
 Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-swlm is distributed in the hope that it will be useful, but WITHOUT ANY
+layman is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-swlm. If not, see <https://www.gnu.org/licenses/>.
+layman. If not, see <https://www.gnu.org/licenses/>.
 """
 from collections import deque
 
@@ -76,17 +76,17 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def onBinding(self, command):
-        if command == "nop swlm move up":
+        if command == "nop layman move up":
             self.moveUp()
-        elif command == "nop swlm move down":
+        elif command == "nop layman move down":
             self.moveDown()
-        elif command == "nop swlm rotate ccw" or command == "nop swlm move left":
+        elif command == "nop layman rotate ccw" or command == "nop layman move left":
             self.rotateCCW()
-        elif command == "nop swlm rotate cw" or command == "nop swlm move right":
+        elif command == "nop layman rotate cw" or command == "nop layman move right":
             self.rotateCW()
-        elif command == "nop swlm swap master":
+        elif command == "nop layman swap master":
             self.swapMaster()
-        elif command == "nop swlm stack toggle":
+        elif command == "nop layman stack toggle":
             self.toggleStackLayout()
 
 
