@@ -414,6 +414,21 @@ class Layman:
 
 
     def init(self):
+        # Get user config options
+        self.cmdCon = Connection()
+        self.options = config.LaymanConfig(self.cmdCon, utils.getConfigPath())
+        self.fetchLayouts()
+
+        # Set default layout maangers for existing workspaces
+        if self.options.getDefault(config.KEY_LAYOUT):
+            for workspace in self.cmdCon.get_workspaces():
+                self.setWorkspaceLayoutManager(workspace)
+                self.workspaceWindows[workspace.num] = []
+                if workspace.focused:
+                    self.focusedWorkspace = workspace
+
+        self.focusedWindow = utils.findFocusedWindow(self.cmdCon)
+
         # Set event callbacks
         self.eventCon = Connection()
         self.eventCon.on(Event.BINDING, self.onEvent)
@@ -425,20 +440,9 @@ class Layman:
         self.eventCon.on(Event.WORKSPACE_INIT, self.onEvent)
         self.eventCon.on(Event.WORKSPACE_FOCUS, self.onEvent)
 
-        # Get user config options
-        self.cmdCon = Connection()
-        self.options = config.LaymanConfig(self.cmdCon, utils.getConfigPath())
-        self.fetchLayouts()
-
         # Register event queue listener
         self.eventQueue.registerListener(self.onEventAddedToQueue)
         self.log("layman started")
-
-        # Set default layout maangers
-        if self.options.getDefault(config.KEY_LAYOUT):
-            for workspace in self.cmdCon.get_workspaces():
-                self.setWorkspaceLayoutManager(workspace)
-                self.workspaceWindows[workspace.num] = []
 
         # Start handling events
         try:
