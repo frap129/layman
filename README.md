@@ -96,6 +96,8 @@ bindym <your bind here> nop layman layout Autotiling # set focused workspace's l
 
 ### MasterStack
 
+![](docs/MasterStack.gif)
+
 `MasterStack` is inspired by dwm/dwl/river, but is my own take on it. It implements a master window with a stack
 on the right side. When a new window is created, it replaces master and master is placed on top of the stack.
 If the master window is deleted, the top of the stack replaces master. The layout of the stack container can be
