@@ -19,8 +19,11 @@ layman. If not, see <https://www.gnu.org/licenses/>.
 from dataclasses import dataclass, field
 from optparse import OptionParser
 from dataclasses import dataclass, field
+import os
 import queue
 import threading
+
+import config
 
 
 class SimpleDict(dict):
@@ -81,11 +84,12 @@ def getConfigPath():
                       type="string",
                       action="callback",
                       callback=getCommaSeparatedArgs,
-                      metavar=".config/layman/config.toml",
+                      metavar=config.CONFIG_PATH,
                       help="Path to user config file.")
 
     try:
         path = parser.parse_args()[0].configPath[0]
     except:
-        path = ".config/layman/config.toml"
+        path = os.path.expanduser("~") + "/" + config.CONFIG_PATH
+
     return path
