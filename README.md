@@ -120,6 +120,7 @@ Config options:
 debug: Boolean to control debug messages
 masterWidth: Int to control the percent width of master window [1-99]
 stackLayout: String to control the layout of the stack ["splitv", "tabbed", "stacking"]
+stackSide: String to control which side of the screen the stack is on ["right", "left"]
 ```
 
 Bindings:
