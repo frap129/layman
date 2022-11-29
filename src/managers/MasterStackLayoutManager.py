@@ -51,7 +51,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def windowRemoved(self, event, window):
-        if self.masterId == window.id:
+        # Ignore excluded windows
+        if self.isExcluded(window):
+            return
+        elif self.masterId == window.id:
             # If window is master, pop the next one off the stack
             self.popWindow()
         else:
