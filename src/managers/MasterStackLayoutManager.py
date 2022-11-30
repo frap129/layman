@@ -18,7 +18,6 @@ layman. If not, see <https://www.gnu.org/licenses/>.
 from collections import deque
 
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
-import utils
 
 KEY_MASTER_WIDTH = "masterWidth"
 KEY_STACK_LAYOUT = "stackLayout"
@@ -38,13 +37,15 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackLayout = options.getForWorkspace(self.workspaceNum, KEY_STACK_LAYOUT) or "splitv"
         self.stackSide = options.getForWorkspace(self.workspaceNum, KEY_STACK_SIDE) or "right"
 
+        # If windows exist, fit them into MasterStack
+        self.arrangeExistingLayout()
 
     def windowAdded(self, event, window):
         # Ignore excluded windows
         if self.isExcluded(window):
             return
 
-        topCon = self.con.get_tree().find_by_id(self.workspaceId)
+        topCon = self.getWorkspaceCon()
         self.pushWindow(window, topCon)
 
         self.log("Added window id: %d" % window.id)
@@ -56,7 +57,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.isExcluded(window):
             return
 
-        topCon = self.con.get_tree().find_by_id(self.workspaceId)
+        topCon = self.getWorkspaceCon()
         self.popWindow(window, topCon)
 
         self.log("Removed window id: %d" % window.id)
@@ -115,11 +116,37 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.logCaller("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
+    def setStackLayout(self):
+        if len(self.stack) != 0 and self.stackId != 0:
+            self.con.command("[con_id=%d] layout %s" % (self.stack[0], self.stackLayout))
+
+
     def moveWindow(self, moveId, targetId):
         self.con.command("[con_id=%d] mark --add move_target" % targetId)
         self.con.command("[con_id=%d] move window to mark move_target" % moveId)
         self.con.command("[con_id=%d] unmark move_target" % targetId)
         self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
+
+
+    def floatToggleAllWindows(self, container):
+        for node in container.nodes:
+            if node.nodes is not None and len(node.nodes) > 0:
+                # Node is a container, float its children instead of the container
+                self.floatToggleAllWindows(node)
+            else:
+                self.con.command("[con_id=%s] focus" % node.id)
+                self.con.command("floating toggle")
+
+
+    def arrangeExistingLayout(self):
+        workspace = self.getWorkspaceCon()
+        self.floatToggleAllWindows(workspace)
+
+        workspace = self.getWorkspaceCon()
+        for node in workspace.floating_nodes:
+            self.con.command("[con_id=%s] focus" % node.id)
+            self.con.command("floating tooggle")
+            self.pushWindow(node, self.getWorkspaceCon())
 
 
     def pushWindow(self, window, topCon):
@@ -144,7 +171,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.con.command("[con_id=%d] layout %s" % (masterCon.id, self.stackLayout))
 
             # Refresh masterCon for updated parent
-            masterCon = self.con.get_tree().find_by_id(masterCon.id)
+            masterCon = self.getConById(masterCon.id)
             self.masterId = window.id
             self.stackId = masterCon.parent.id
             self.log("New stackId: %d" % self.stackId)
@@ -168,7 +195,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 topIndex = -1
 
             # Move the previous master to top of stack
-            while self.con.get_tree().find_by_id(self.stackId).nodes[topIndex].id != self.masterId:
+            while self.getConById(self.stackId).nodes[topIndex].id != self.masterId:
                 self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
 
             self.stack.append(self.masterId)
@@ -219,11 +246,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                     break
 
 
-    def setStackLayout(self):
-        if len(self.stack) != 0 and self.stackId != 0:
-            self.con.command("[con_id=%d] layout %s" % (self.stack[0], self.stackLayout))
-
-
     def toggleStackLayout(self):
         # Pick next stack layout
         if self.stackLayout == "splitv":
@@ -241,29 +263,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("Changed stackLayout to %s" % self.stackLayout)
 
 
-    def floatToggleAllWindows(self, container):
-        for node in container.nodes:
-            if node.nodes is not None and len(node.nodes) > 0:
-                # Node is a container, float its children instead of the container
-                self.floatToggleAllWindows(node)
-            else:
-                self.con.command("[con_id=%s] focus" % node.id)
-                self.con.command("floating toggle")
-
-
-    def arrangeExistingLayout(self):
-        workspace = utils.findFocusedWindow(self.con).workspace()
-        self.floatToggleAllWindows(workspace)
-
-        workspace = utils.findFocusedWindow(self.con).workspace()
-        for node in workspace.floating_nodes:
-            self.con.command("[con_id=%s] focus" % node.id)
-            self.con.command("floating tooggle")
-            self.pushWindow(node, self.con.get_tree().find_by_id(self.workspaceId))
-
-
     def moveUp(self):
-        focusedWindow = utils.findFocusedWindow(self.con)
+        focusedWindow = self.getFocusedCon()
 
         if focusedWindow is None:
             self.log("No window focused, can't move")
@@ -296,7 +297,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if len(self.stack) < 2:
             return
 
-        focusedWindow = utils.findFocusedWindow(self.con)
+        focusedWindow = self.getFocusedCon()
         if focusedWindow is None:
             self.log("No window focused, can't move")
             return
@@ -380,7 +381,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("Stack emtpy, can't swap")
             return
 
-        focusedWindow = utils.findFocusedWindow(self.con)
+        focusedWindow = self.getFocusedCon()
 
         if focusedWindow is None:
             self.log("No window focused, can't swap")
