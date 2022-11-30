@@ -82,3 +82,15 @@ class WorkspaceLayoutManager:
     def logCaller(self, msg):
         if self.debug:
             print(("%s %d: %s: %s" % (self.shortName, self.workspaceNum, inspect.stack()[2][3], msg)))
+
+    # These are some helper functions for getting container ids
+    def getWorkspaceCon(self):
+        return self.con.get_tree().find_by_id(self.workspaceId)
+
+
+    def getFocusedCon(self):
+        return self.con.get_tree().find_focused()
+
+
+    def getConById(self, conId):
+        return self.con.get_tree().find_by_id(conId)
