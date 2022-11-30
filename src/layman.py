@@ -257,7 +257,7 @@ class Layman:
         # Handle wlm creation commands
         if "nop layman layout " in command:
             shortName = command.split(' ')[-1]
-            layoutName = self.getLayoutNameByShortName(shortName)
+            name = self.getLayoutNameByShortName(shortName)
             self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
 
             self.log("Created %s on workspace %d" % (self.managers[workspace.num].shortName, workspace.num))
