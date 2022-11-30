@@ -94,6 +94,25 @@ Binding:
 bindym <your bind here> nop layman layout Autotiling # set focused workspace's layout manager to Autotiling
 ```
 
+### Grid
+
+Like autotiling, Grid splits window based on width/height ratio. It differs from Autotiling by always splttting
+the largest existing window, rather than the currently focused window. If multiple windows have the same size,
+Grid tries to split the left-most and top-most "largest" window. This results in a grid-like pattern.
+
+Known bugs:
+- For some reason, the left-most and top-most window is not always the one that gets split.
+
+
+Config options:
+```
+debug: Boolean to control debug messages
+```
+
+Binding:
+```
+bindym <your bind here> nop layman layout Grid # set focused workspace's layout manager to Grid
+```
 ### MasterStack
 
 ![](docs/MasterStack.gif)
