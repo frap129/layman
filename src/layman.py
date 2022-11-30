@@ -26,9 +26,10 @@ import shutil
 
 import utils
 import config
-from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
-from managers.MasterStackLayoutManager import MasterStackLayoutManager
-from managers.AutotilingLayoutManager import AutotilingLayoutManager
+from managers import WorkspaceLayoutManager
+from managers import MasterStackLayoutManager
+from managers import AutotilingLayoutManager
+from managers import GridLayoutManager
 
 
 class Layman:
@@ -255,17 +256,9 @@ class Layman:
 
         # Handle wlm creation commands
         if "nop layman layout " in command:
-            if command == "nop layman layout none":
-                # Create no-op WLM to prevent onWorkspace from overwriting
-                self.managers[workspace.num] = WorkspaceLayoutManager(self.cmdCon, workspace, self.options)
-            elif command == "nop layman layout MasterStack":
-                self.managers[workspace.num] = MasterStackLayoutManager(self.cmdCon, workspace, self.options)
-            elif command == "nop layman layout Autotiling":
-                self.managers[workspace.num] = AutotilingLayoutManager(self.cmdCon, workspace, self.options)
-            else:
-                shortName = command.split(' ')[-1]
-                layoutName = self.getLayoutNameByShortName(shortName)
-                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
+            shortName = command.split(' ')[-1]
+            layoutName = self.getLayoutNameByShortName(shortName)
+            self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
 
             self.log("Created %s on workspace %d" % (self.managers[workspace.num].shortName, workspace.num))
             return
@@ -325,6 +318,13 @@ class Layman:
     """
 
     def fetchLayouts(self):
+        # Get builtin layouts
+        self.userLayouts["WorkspaceLayoutManager"] = WorkspaceLayoutManager
+        self.userLayouts["AutotilingLayoutManager"] = AutotilingLayoutManager
+        self.userLayouts["MasterStackLayoutManager"] = MasterStackLayoutManager
+        self.userLayouts["GridLayoutManager"] = GridLayoutManager
+
+        # Get user provided layouts
         layoutPath = os.path.dirname(utils.getConfigPath())
         for file in os.listdir(layoutPath):
             if file.endswith(".py"):
@@ -350,20 +350,9 @@ class Layman:
 
         layoutName = self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT)
         if workspace.num not in self.managers:
-            if layoutName == AutotilingLayoutManager.shortName:
-                self.managers[workspace.num] = AutotilingLayoutManager(self.cmdCon, workspace, self.options)
-                self.logCaller("Initialized workspace %d with %s" % (workspace.num, self.managers[workspace.num].shortName))
-            elif layoutName == MasterStackLayoutManager.shortName:
-                self.managers[workspace.num] = MasterStackLayoutManager(self.cmdCon, workspace, self.options)
-                self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
-            elif layoutName == WorkspaceLayoutManager.shortName:
-                self.managers[workspace.num] = WorkspaceLayoutManager(self.cmdCon, workspace, self.options)
-                self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
-            else:
-                # If the layout isn't prebundled, search user layouts
-                name = self.getLayoutNameByShortName(layoutName)
-                self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
-                self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
+            name = self.getLayoutNameByShortName(layoutName)
+            self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
+            self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
 
         if workspace.num not in self.workspaceWindows:
             self.workspaceWindows[workspace.num] = []
