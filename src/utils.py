@@ -65,7 +65,7 @@ def findFocusedWindow(con):
 
 
 def findFocusedWorkspace(con):
-    return con.get_tree().find_focused().workspace() 
+    return con.get_tree().find_focused().workspace()
 
 
 def getConfigPath():
