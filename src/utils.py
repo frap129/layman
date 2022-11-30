@@ -61,19 +61,11 @@ def getCommaSeparatedArgs(option, opt, value, parser):
 
 
 def findFocusedWindow(con):
-    tree = con.get_tree()
-    focusedWindow = tree.find_focused()
-    return focusedWindow
+    return con.get_tree().find_focused()
 
 
 def findFocusedWorkspace(con):
-    focused = None
-    for workspace in con.get_workspaces():
-        if workspace.focused:
-            focused = workspace
-            break
-
-    return focused
+    return con.get_tree().find_focused().workspace() 
 
 
 def getConfigPath():
