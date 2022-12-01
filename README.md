@@ -67,11 +67,6 @@ containing the parent class from which all WLMs are derived.
 The `none` layout manager does not manage any windows. It exists as a reference implementation, and to allow users
 to disable layout management on a given workspace.
 
-Config options:
-```
-debug: Boolean to control debug messages
-```
-
 Binding:
 ```
 bindym <your bind here> nop layman layout none # disable layout management on a workspace
@@ -84,7 +79,6 @@ the `Autotiling` layout manager alternates between splith and splitv based on a 
 
 Config options:
 ```
-debug: Boolean to control debug messages
 depthLimit: Max number of nested splits [0 means no limit]
 ```
 
@@ -101,12 +95,6 @@ Grid tries to split the left-most and top-most "largest" window. This results in
 
 Known bugs:
 - For some reason, the left-most and top-most window is not always the one that gets split.
-
-
-Config options:
-```
-debug: Boolean to control debug messages
-```
 
 Binding:
 ```
@@ -134,7 +122,6 @@ Known bugs:
 
 Config options:
 ```
-debug: Boolean to control debug messages
 masterWidth: Int to control the percent width of master window [1-99]
 stackLayout: String to control the layout of the stack ["splitv", "tabbed", "stacking"]
 stackSide: String to control which side of the screen the stack is on ["right", "left"]
