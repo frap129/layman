@@ -143,24 +143,31 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.floatToggleAllWindows(workspace)
 
         workspace = self.getWorkspaceCon()
-        for node in workspace.floating_nodes:
+        while len(workspace.floating_nodes) > 0:
+            node = workspace.floating_nodes[0]
             self.con.command("[con_id=%s] focus" % node.id)
             self.con.command("floating tooggle")
-            self.pushWindow(node, self.getWorkspaceCon())
+            workspace = self.getWorkspaceCon()
+            self.pushWindow(node, workspace)
 
 
     def pushWindow(self, window, topCon):
-        if len(topCon.nodes) == 1:
-            if len(topCon.leaves()) > 1:
+        leaves = topCon.leaves()
+        masterCon = topCon.find_by_id(self.masterId)
+        stackCon = topCon.find_by_id(self.stackId)
+        if len(leaves) > 2 and (masterCon is None or stackCon is None):
+            # Something's not right, I can feel it
+            self.arrangeExistingLayout()
+        elif len(topCon.nodes) == 1:
+            if len(leaves) > 1:
                 # Recurse until the first container with multiple nodes is found
                 self.pushWindow(window, topCon.nodes[0])
             else:
                 # Only one window exists, make it master
                 self.masterId = topCon.nodes[0].id
                 self.con.command("[con_id=%d] layout %s" % (topCon.id, "splith"))
-        elif len(topCon.nodes) == 2 and len (topCon.leaves()) == 2:
+        elif len(topCon.nodes) == 2 and len (leaves) == 2:
             # Only two windows, initialize stack. Start by getting master on the correct side
-            masterCon = topCon.find_by_id(self.masterId)
             if window.rect.x > masterCon.rect.x and self.stackSide == "right":
                 self.con.command("[con_id=%d] move left" % (window.id))
             elif window.rect.x < masterCon.rect.x and self.stackSide == "left":
@@ -177,11 +184,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.log("New stackId: %d" % self.stackId)
             self.stack.append(masterCon.id)
             self.setMasterWidth()
-        elif len(topCon.nodes) > 2 or len(topCon.leaves()) > (len(self.stack) + 1):
+        elif len(topCon.nodes) > 2 or len(leaves) > (len(self.stack) + 1):
             if len(topCon.nodes) > 2:
                 # New window in top container, move old master to stack
                 self.moveWindow(self.masterId, self.stack[-1])
-            elif len(topCon.leaves()) > (len(self.stack) + 1):
+            elif len(leaves) > (len(self.stack) + 1):
                 # New window in stack, swap with master
                 self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, self.masterId))
 
