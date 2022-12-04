@@ -15,6 +15,8 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>.
 """
+import threading
+from time import sleep
 from collections import deque
 
 from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
@@ -38,7 +40,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackSide = options.getForWorkspace(self.workspaceNum, KEY_STACK_SIDE) or "right"
 
         # If windows exist, fit them into MasterStack
-        self.arrangeExistingLayout()
+        self.arrangeUntrackedWindows()
+
 
     def windowAdded(self, event, window):
         # Ignore excluded windows
@@ -128,27 +131,23 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
 
 
-    def floatToggleAllWindows(self, container):
-        for node in container.nodes:
-            if node.nodes is not None and len(node.nodes) > 0:
-                # Node is a container, float its children instead of the container
-                self.floatToggleAllWindows(node)
-            else:
-                self.con.command("[con_id=%s] focus" % node.id)
+    def floatToggleUntrackedWindows(self):
+        # Float all untracked windows
+        for window in self.getWorkspaceCon().leaves():
+            if window.id not in self.stack and window.id != self.masterId:
+                self.con.command("[con_id=%s] focus" % window.id)
                 self.con.command("floating toggle")
 
+       # Unfloat to simulate adding a window
+        for window in self.getWorkspaceCon().floating_nodes:
+            self.con.command("[con_id=%s] focus" % window.id)
+            self.con.command("floating toggle")
+            sleep(0.01) # Prevent events from happening simultaneously
 
-    def arrangeExistingLayout(self):
-        workspace = self.getWorkspaceCon()
-        self.floatToggleAllWindows(workspace)
 
-        workspace = self.getWorkspaceCon()
-        while len(workspace.floating_nodes) > 0:
-            node = workspace.floating_nodes[0]
-            self.con.command("[con_id=%s] focus" % node.id)
-            self.con.command("floating tooggle")
-            workspace = self.getWorkspaceCon()
-            self.pushWindow(node, workspace)
+    def arrangeUntrackedWindows(self):
+        thread = threading.Thread(target=self.floatToggleUntrackedWindows)
+        thread.start()
 
 
     def pushWindow(self, window, topCon):
@@ -157,7 +156,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         stackCon = topCon.find_by_id(self.stackId)
         if len(leaves) > 2 and (masterCon is None or stackCon is None):
             # Something's not right, I can feel it
-            self.arrangeExistingLayout()
+            self.arrangeUntrackedWindows()
         elif len(topCon.nodes) == 1:
             if len(leaves) > 1:
                 # Recurse until the first container with multiple nodes is found
@@ -246,12 +245,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         elif len(topCon.nodes) == 2:
             # A stack item was destroyed
             self.setMasterWidth()
-            stackCon = topCon.find_by_id(self.stackId)
-            for node in stackCon.nodes:
-                if node.id not in self.stack:
-                    self.stack.remove(node.id)
+            allWindowIds = {window.id for window in topCon.leaves()}
+            for id in self.stack:
+                if id not in allWindowIds:
+                    self.stack.remove(id)
                     break
-
 
     def toggleStackLayout(self):
         # Pick next stack layout
@@ -401,6 +399,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.stack.append(self.masterId)
             self.masterId = targetId
             self.log("Swapped master with top of stack")
+            self.con.command("[con_id=%d] focus" % self.masterId)
             return
 
         # Find focused window in record
