@@ -134,7 +134,7 @@ class Layman:
 
 
     def windowFloating(self, event):
-        window = utils.findFocusedWindow(self.cmdCon)
+        window = self.cmdCon.get_tree().find_by_id(event.container.id)
         workspace = utils.findFocusedWorkspace(self.cmdCon)
 
         # Check if we should pass this call to a manager
