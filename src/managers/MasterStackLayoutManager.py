@@ -121,7 +121,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def setStackLayout(self):
         if len(self.stack) != 0 and self.stackId != 0:
-            self.con.command("[con_id=%d] layout %s" % (self.stack[0], self.stackLayout))
+            self.con.command("[con_id=%d] layout %s" % (self.stackId, self.stackLayout))
 
 
     def moveWindow(self, moveId, targetId):
@@ -142,7 +142,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         for window in self.getWorkspaceCon().floating_nodes:
             self.con.command("[con_id=%s] focus" % window.id)
             self.con.command("floating toggle")
-            sleep(0.01) # Prevent events from happening simultaneously
+            sleep(0.03) # Prevent events from happening simultaneously
 
 
     def arrangeUntrackedWindows(self):
@@ -167,10 +167,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.con.command("[con_id=%d] layout %s" % (topCon.id, "splith"))
         elif len(topCon.nodes) == 2 and len (leaves) == 2:
             # Only two windows, initialize stack. Start by getting master on the correct side
-            if window.rect.x > masterCon.rect.x and self.stackSide == "right":
-                self.con.command("[con_id=%d] move left" % (window.id))
-            elif window.rect.x < masterCon.rect.x and self.stackSide == "left":
-                self.con.command("[con_id=%d] move right" % (window.id))
+            swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
+            swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
+            if swapLeft or swapRight:
+                self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, masterCon.id))
 
             # Create stack container
             self.con.command("[con_id=%d] split vertical" % (masterCon.id))
@@ -266,6 +266,21 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if len(self.stack) != 0:
             self.con.command("[con_id=%d] layout %s" % (self.stack[0], self.stackLayout))
             self.log("Changed stackLayout to %s" % self.stackLayout)
+
+
+    def toggleStackSide(self):
+        self.stackSide = "left" if self.stackSide == "right" else "right"
+        stackCon = self.getConById(self.stackId)
+        masterCon = self.getConById(self.masterId)
+        moveToRight = stackCon.rect.x < masterCon.rect.x and self.stackSide == "right"
+        moveToLeft = stackCon.rect.x > masterCon.rect.x and self.stackSide == "left"
+
+        if stackCon is not None and masterCon is not None:
+            if stackCon.rect.x == masterCon.rect.x:
+                # Master has incorrect layout
+                self.con.command("[con_id=%d] layout splith" % self.masterId)
+            elif moveLeft or moveRight:
+                self.con.command("[con_id=%d] swap container with con_id %d" % (self.stackId, self.masterId))
 
 
     def moveUp(self):
