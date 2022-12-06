@@ -47,9 +47,9 @@ class Layman:
     window::new, window::focus, window::close, window::move, and window::floating.
     """
 
-    def windowCreated(self, event):
-        window = utils.findFocusedWindow(self.cmdCon)
-        workspace = utils.findFocusedWorkspace(self.cmdCon)
+    def windowCreated(self, conn, event):
+        window = utils.findFocusedWindow(self.cmdConn)
+        workspace = utils.findFocusedWorkspace(self.cmdConn)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(workspace):
@@ -69,9 +69,9 @@ class Layman:
         self.managers[workspace.num].windowAdded(event, window)
 
 
-    def windowFocused(self, event):
-        window = utils.findFocusedWindow(self.cmdCon)
-        workspace = utils.findFocusedWorkspace(self.cmdCon)
+    def windowFocused(self, conn, event):
+        window = utils.findFocusedWindow(self.cmdConn)
+        workspace = utils.findFocusedWorkspace(self.cmdConn)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(workspace):
@@ -83,7 +83,7 @@ class Layman:
         self.managers[workspace.num].windowFocused(event, window)
 
 
-    def windowClosed(self, event):
+    def windowClosed(self, conn, event):
         # Try to find workspace num by locating where the window is recorded
         workspaceNum = None
         for num in self.workspaceWindows:
@@ -93,7 +93,7 @@ class Layman:
 
         # Fallback to focused workspace if the window wasn't tracked
         if workspaceNum is None:
-            workspaceNum = utils.findFocusedWorkspace(self.cmdCon).num
+            workspaceNum = utils.findFocusedWorkspace(self.cmdConn).num
 
         # Remove window
         try:
@@ -103,12 +103,13 @@ class Layman:
 
         # Pass command to the appropriate manager
         self.log("Calling windowRemoved for workspace %d" % workspaceNum)
-        self.managers[workspaceNum].windowRemoved(event, utils.findFocusedWindow(self.cmdCon))
+        window = utils.findFocusedWindow(self.cmdConn)
+        self.managers[workspaceNum].windowRemoved(event, window)
 
 
-    def windowMoved(self, event):
-        window = utils.findFocusedWindow(self.cmdCon)
-        workspace = utils.findFocusedWorkspace(self.cmdCon)
+    def windowMoved(self, conn, event):
+        window = utils.findFocusedWindow(self.cmdConn)
+        workspace = utils.findFocusedWorkspace(self.cmdConn)
 
         if window.id in self.workspaceWindows[workspace.num]:
             # Window moved within the same workspace, call windowMoved
@@ -132,9 +133,9 @@ class Layman:
                         self.managers[workspaceNum].windowRemoved(event, window)
 
 
-    def windowFloating(self, event):
-        window = self.cmdCon.get_tree().find_by_id(event.container.id)
-        workspace = utils.findFocusedWorkspace(self.cmdCon)
+    def windowFloating(self, conn, event):
+        window = self.cmdConn.get_tree().find_by_id(event.container.id)
+        workspace = utils.findFocusedWorkspace(self.cmdConn)
 
         # Check if we should pass this call to a manager
         if self.isExcluded(workspace):
@@ -173,8 +174,9 @@ class Layman:
     workspace::init and workspace::focus.
     """
 
-    def workspaceInit(self, event):
-        self.setWorkspaceLayoutManager(event.current)
+    def workspaceInit(self, conn, event):
+        if not self.isExcluded(event.current):
+            self.setWorkspaceLayoutManager(event.current)
 
     """
     Binding Events
@@ -183,14 +185,14 @@ class Layman:
     the binding command or passing it to the intended workspace layout manager.
     """
 
-    def onBinding(self, event):
+    def onBinding(self, conn, event):
         # Exit early if binding isnt for slwm
         command = event.ipc_data["binding"]["command"].strip()
         if "nop layman" not in command:
             return
             
         # Check if we should pass this call to a manager
-        workspace = utils.findFocusedWorkspace(self.cmdCon)
+        workspace = utils.findFocusedWorkspace(self.cmdConn)
         if self.isExcluded(workspace):
             self.log("Workspace or output excluded")
             return
@@ -202,14 +204,14 @@ class Layman:
             return
         elif "nop layman move " in  command:
             moveCmd = command.replace("nop layman ", '')
-            self.cmdCon.command(moveCmd)
+            self.cmdConn.command(moveCmd)
             self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
             return
 
         # Handle reload command
         if command == "nop layman reload":
             # Get user config options
-            self.options = config.LaymanConfig(self.cmdCon, utils.getConfigPath())
+            self.options = config.LaymanConfig(self.cmdConn, utils.getConfigPath())
             self.fetchLayouts()
             self.log("Reloaded layman config")
             return
@@ -218,9 +220,10 @@ class Layman:
         if "nop layman layout " in command:
             shortName = command.split(' ')[-1]
             name = self.getLayoutNameByShortName(shortName)
-            self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
+            layout = getattr(self.userLayouts[name], name)
+            self.managers[workspace.num] = layout(self.cmdConn, workspace, self.options)
 
-            self.log("Created %s on workspace %d" % (self.managers[workspace.num].shortName, workspace.num))
+            self.log("Created %s on workspace %d" % (shortName, workspace.num))
             return
 
         # Pass unknown command to the appropriate wlm
@@ -230,25 +233,6 @@ class Layman:
             
         self.log("Calling manager for workspace %d" % workspace.num)
         self.managers[workspace.num].onBinding(command)
-
-
-    def onEvent(self, con, event):
-        if type(event) == BindingEvent:
-            self.onBinding(event)
-        if type(event) == WorkspaceEvent:
-            if event.change == "init":
-                self.workspaceInit(event)
-        elif type(event) == WindowEvent:
-            if event.change == "new":
-                self.windowCreated(event)
-            elif event.change == "focus":
-                self.windowFocused(event)
-            elif event.change == "move":
-                self.windowMoved(event)
-            elif event.change == "floating":
-                self.windowFloating(event)
-            elif event.change == "close":
-                self.windowClosed(event)
 
 
     """
@@ -285,13 +269,10 @@ class Layman:
 
 
     def setWorkspaceLayoutManager(self, workspace):
-        # Check if we should manage workspace
-        if self.isExcluded(workspace):
-            return
 
         layoutName = self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT)
         name = self.getLayoutNameByShortName(layoutName)
-        self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdCon, workspace, self.options)
+        self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdConn, workspace, self.options)
         self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
 
         if workspace.num not in self.workspaceWindows:
@@ -333,35 +314,36 @@ class Layman:
 
     def init(self):
         # Get user config options
-        self.cmdCon = Connection()
-        self.options = config.LaymanConfig(self.cmdCon, utils.getConfigPath())
+        self.cmdConn = Connection()
+        self.options = config.LaymanConfig(self.cmdConn, utils.getConfigPath())
         self.fetchLayouts()
 
         # Set default layout maangers for existing workspaces
         if self.options.getDefault(config.KEY_LAYOUT):
-            for workspace in self.cmdCon.get_workspaces():
-                self.setWorkspaceLayoutManager(workspace)
-                self.workspaceWindows[workspace.num] = []
+            for workspace in self.cmdConn.get_workspaces():
+                if not self.isExcluded(workspace):
+                    self.setWorkspaceLayoutManager(workspace)
+                    self.workspaceWindows[workspace.num] = []
 
         # Set event callbacks
-        self.eventCon = Connection()
-        self.eventCon.on(Event.BINDING, self.onEvent)
-        self.eventCon.on(Event.WINDOW_FOCUS, self.onEvent)
-        self.eventCon.on(Event.WINDOW_NEW, self.onEvent)
-        self.eventCon.on(Event.WINDOW_CLOSE, self.onEvent)
-        self.eventCon.on(Event.WINDOW_MOVE, self.onEvent)
-        self.eventCon.on(Event.WINDOW_FLOATING, self.onEvent)
-        self.eventCon.on(Event.WORKSPACE_INIT, self.onEvent)
+        self.eventConn = Connection()
+        self.eventConn.on(Event.BINDING, self.onBinding)
+        self.eventConn.on(Event.WINDOW_FOCUS, self.windowFocused)
+        self.eventConn.on(Event.WINDOW_NEW, self.windowCreated)
+        self.eventConn.on(Event.WINDOW_CLOSE, self.windowClosed)
+        self.eventConn.on(Event.WINDOW_MOVE, self.windowMoved)
+        self.eventConn.on(Event.WINDOW_FLOATING, self.windowFloating)
+        self.eventConn.on(Event.WORKSPACE_INIT, self.workspaceInit)
 
         # Start handling events
         self.log("layman started")
         try:
-            self.eventCon.main()
+            self.eventConn.main()
         except BaseException as e:
             print("restarting after exception:")
             logging.exception(e)
-            self.eventCon.main_quit()
-            self.eventCon.off(self.onEvent)
+            self.eventConn.main_quit()
+            self.eventConn.off(self.onEvent)
             self.init()
 
 
