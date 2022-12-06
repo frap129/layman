@@ -343,7 +343,6 @@ class Layman:
             print("restarting after exception:")
             logging.exception(e)
             self.eventConn.main_quit()
-            self.eventConn.off(self.onEvent)
             self.init()
 
 
