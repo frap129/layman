@@ -142,10 +142,18 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         for window in self.getWorkspaceCon().floating_nodes:
             self.con.command("[con_id=%s] focus" % window.id)
             self.con.command("floating toggle")
-            sleep(0.03) # Prevent events from happening simultaneously
 
+            # TODO Figure out why sleeping here works better than locking
+            # this thread until pushWindow exits
+            sleep(0.015) # Prevent events from happening before push is done
 
     def arrangeUntrackedWindows(self):
+        '''
+        Floating the windows causes layman to send window added/removed events since
+        this layout doesnt support floating windows. By floating windows on a separate
+        thread, we can reinsert them and let the layout handle them correctly. Doing
+        this on the same thread would block the layout from handling events.
+        '''
         thread = threading.Thread(target=self.floatToggleUntrackedWindows)
         thread.start()
 
