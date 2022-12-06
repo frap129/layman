@@ -35,7 +35,6 @@ from managers import GridLayoutManager
 class Layman:
     def __init__(self):
         self.managers = utils.SimpleDict()
-        self.eventQueue = utils.EventQueue()
         self.userLayouts = utils.SimpleDict()
         self.workspaceWindows = utils.SimpleDict()
         setproctitle("layman")
@@ -233,24 +232,7 @@ class Layman:
         self.managers[workspace.num].onBinding(command)
 
 
-    """
-    Event Queue Management
-
-    The following functions manage how events are added, removed, and sorted in the
-    event queue. When an event is received from the i3ipc connection, it is prioritized
-    based on its type and added to the event queue. This triggers the
-    onEventAddedToQueue listener, which dispatches the event to is handler.
-    """
-
     def onEvent(self, con, event):
-        try:
-            self.eventQueue.put(utils.EventItem(event))
-        except TypeError as e:
-            logging.exception(e)
-
-
-    def onEventAddedToQueue(self):
-        event = self.eventQueue.get().event
         if type(event) == BindingEvent:
             self.onBinding(event)
         if type(event) == WorkspaceEvent:
@@ -371,11 +353,8 @@ class Layman:
         self.eventCon.on(Event.WINDOW_FLOATING, self.onEvent)
         self.eventCon.on(Event.WORKSPACE_INIT, self.onEvent)
 
-        # Register event queue listener
-        self.eventQueue.registerListener(self.onEventAddedToQueue)
-        self.log("layman started")
-
         # Start handling events
+        self.log("layman started")
         try:
             self.eventCon.main()
         except BaseException as e:
