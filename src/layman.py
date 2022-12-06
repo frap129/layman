@@ -24,12 +24,12 @@ import os
 from setproctitle import setproctitle
 import shutil
 
-import utils
-import config
-from managers import WorkspaceLayoutManager
-from managers import MasterStackLayoutManager
-from managers import AutotilingLayoutManager
-from managers import GridLayoutManager
+from . import utils
+from . import config
+from .managers import WorkspaceLayoutManager
+from .managers import MasterStackLayoutManager
+from .managers import AutotilingLayoutManager
+from .managers import GridLayoutManager
 
 
 class Layman:

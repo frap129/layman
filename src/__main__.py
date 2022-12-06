@@ -3,8 +3,8 @@ from . import layman
 def main():
     """Application entry point."""
    # Start layman
-    layman = Layman()
-    layman.init()
+    daemon = layman.Layman()
+    daemon.init()
 
 if __name__ == '__main__':
     main()

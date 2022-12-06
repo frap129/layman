@@ -22,14 +22,11 @@ being too similar to another package, swmm. After rebranding to `layman`, the na
 Until this is resolved, please use the instructions below.
 
 ## Installing from source
-
-layman uses setuptools for packaging. Open a terminal and clone this repository. This following step is entirely optional,
-as once the source is cloned you can run src/layman.py directly. If you would like to be able to call `layman` from anywhere,
-run
 ```
+git clone https://github.com/frap129/layman
 pip install ~/path/to/layman
 ```
-to package and install layman.
+to package and install layman. If you do not want to have to reinstall after a change, add --editable to the pip command
 
 ## Configuration
 

@@ -1,5 +1,5 @@
 # Start layman
-exec ~/software/layman/src/layman.py
+exec layman
 
 # Toggle layout managers
 bindsym $mod+k nop layman layout Autotiling
