@@ -95,9 +95,6 @@ Like autotiling, Grid splits window based on width/height ratio. It differs from
 the largest existing window, rather than the currently focused window. If multiple windows have the same size,
 Grid tries to split the left-most and top-most "largest" window. This results in a grid-like pattern.
 
-Known bugs:
-- For some reason, the left-most and top-most window is not always the one that gets split.
-
 Binding:
 ```
 bindym <your bind here> nop layman layout Grid # set focused workspace's layout manager to Grid
@@ -119,7 +116,6 @@ Rotating right moves master to the top of the stack, and the bottom of the stack
 `MasterStack` provides overrides for `move <directon>` binds. 
 
 Known bugs:
--  When arranging an existing layout, the master/stack containers are not initialized correctly.
 -  Sometimes existing windows get missed when arranging an existing layout
 
 Config options:
