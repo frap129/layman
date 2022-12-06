@@ -19,7 +19,7 @@ import threading
 from time import sleep
 from collections import deque
 
-from managers.WorkspaceLayoutManager import WorkspaceLayoutManager
+from .WorkspaceLayoutManager import WorkspaceLayoutManager
 
 KEY_MASTER_WIDTH = "masterWidth"
 KEY_STACK_LAYOUT = "stackLayout"

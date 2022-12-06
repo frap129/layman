@@ -19,7 +19,7 @@ layman. If not, see <https://www.gnu.org/licenses/>.
 from optparse import OptionParser
 import os
 
-import config
+from . import config
 
 class SimpleDict(dict):
     def __missing__(self, key):

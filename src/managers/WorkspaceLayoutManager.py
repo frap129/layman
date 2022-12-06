@@ -17,7 +17,7 @@ layman. If not, see <https://www.gnu.org/licenses/>.
 """
 import inspect
 
-from config import KEY_DEBUG
+from ..config import KEY_DEBUG
 
 class WorkspaceLayoutManager:
     # These properties should be overriden to configure your WLM as
