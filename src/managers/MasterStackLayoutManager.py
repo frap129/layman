@@ -40,6 +40,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackSide = options.getForWorkspace(self.workspaceNum, KEY_STACK_SIDE) or "right"
 
         # If windows exist, fit them into MasterStack
+        self.pushEvent = threading.Event()
         self.arrangeUntrackedWindows()
 
 
@@ -53,6 +54,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         self.log("Added window id: %d" % window.id)
         self.con.command("[con_id=%d] focus" % self.masterId)
+        self.pushEvent.set() # Unblock the arrange thread
 
 
     def windowRemoved(self, event, window):
@@ -142,10 +144,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         for window in self.getWorkspaceCon().floating_nodes:
             self.con.command("[con_id=%s] focus" % window.id)
             self.con.command("floating toggle")
-
-            # TODO Figure out why sleeping here works better than locking
-            # this thread until pushWindow exits
-            sleep(0.015) # Prevent events from happening before push is done
+            # Wait until the window is added
+            self.pushEvent.clear()
+            self.pushEvent.wait()
 
     def arrangeUntrackedWindows(self):
         '''
