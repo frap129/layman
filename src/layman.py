@@ -318,13 +318,6 @@ class Layman:
         self.options = config.LaymanConfig(self.cmdConn, utils.getConfigPath())
         self.fetchLayouts()
 
-        # Set default layout maangers for existing workspaces
-        if self.options.getDefault(config.KEY_LAYOUT):
-            for workspace in self.cmdConn.get_workspaces():
-                if not self.isExcluded(workspace):
-                    self.setWorkspaceLayoutManager(workspace)
-                    self.workspaceWindows[workspace.num] = []
-
         # Set event callbacks
         self.eventConn = Connection()
         self.eventConn.on(Event.BINDING, self.onBinding)
@@ -334,6 +327,13 @@ class Layman:
         self.eventConn.on(Event.WINDOW_MOVE, self.windowMoved)
         self.eventConn.on(Event.WINDOW_FLOATING, self.windowFloating)
         self.eventConn.on(Event.WORKSPACE_INIT, self.workspaceInit)
+
+      # Set default layout maangers for existing workspaces
+        if self.options.getDefault(config.KEY_LAYOUT):
+            for workspace in self.cmdConn.get_workspaces():
+                if not self.isExcluded(workspace):
+                    self.setWorkspaceLayoutManager(workspace)
+                    self.workspaceWindows[workspace.num] = []
 
         # Start handling events
         self.log("layman started")
