@@ -2,12 +2,15 @@
 exec layman
 
 # Toggle layout managers
-bindsym $mod+k nop layman layout Autotiling
+bindsym $mod+a nop layman layout Autotiling
 bindsym $mod+m nop layman layout MasterStack
+bindsym $mod+n nop layman layout none
+bindsym $mod+g nop layman layout Grid
 
 # For MasterStack
 bindsym $mod+s nop layman swap master
-bindsym $mod+Shift+T nop layman stack toggle
+bindsym $mod+t nop layman stack toggle
+bindsym $mod+r nop layman stackside toggle
 
 # Override move binds
 bindsym $mod+Shift+Left nop layman move left
