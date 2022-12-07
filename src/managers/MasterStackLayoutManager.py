@@ -95,6 +95,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.swapMaster()
         elif command == "nop layman stack toggle":
             self.toggleStackLayout()
+        elif command == "nop layman stackside toggle":
+            self.toggleStackSide()
 
 
     def isExcluded(self, window):
@@ -293,8 +295,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             if stackCon.rect.x == masterCon.rect.x:
                 # Master has incorrect layout
                 self.con.command("[con_id=%d] layout splith" % self.masterId)
-            elif moveLeft or moveRight:
+            elif moveToLeft or moveToRight:
                 self.con.command("[con_id=%d] swap container with con_id %d" % (self.stackId, self.masterId))
+                self.setMasterWidth()
 
 
     def moveUp(self):

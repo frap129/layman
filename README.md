@@ -131,6 +131,7 @@ bindym <your bind here> nop layman rotate ccw # rotate layout ccw 1 window
 bindym <your bind here> nop layman move up # move focused winodw up 1 position in the stack
 bindym <your bind here> nop layman move down # move focused window down one position in the stack
 bindym <your bind here> nop layman stack toggle # toggles stack layout through splitv, tabbed, and stacking
+bindym <your bind here> nop layman stackside toggle # toggles stack side between left and right
 ```
 
 ### User Created Layouts
