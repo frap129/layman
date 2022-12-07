@@ -25,10 +25,13 @@ KEY_MASTER_WIDTH = "masterWidth"
 KEY_STACK_LAYOUT = "stackLayout"
 KEY_STACK_SIDE = "stackSide"
 
+# Lock to prevent multiple instances from arranging at once
+arranging = threading.Lock()
 
 class MasterStackLayoutManager(WorkspaceLayoutManager):
     shortName = "MasterStack"
     overridesMoveBinds = True
+
 
     def __init__(self, con, workspace, options):
         super().__init__(con, workspace, options)
@@ -134,19 +137,21 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def floatToggleUntrackedWindows(self):
-        # Float all untracked windows
-        for window in self.getWorkspaceCon().leaves():
-            if window.id not in self.stack and window.id != self.masterId:
+        with arranging:
+            # Float all untracked windows
+            for window in self.getWorkspaceCon().leaves():
+                if window.id not in self.stack and window.id != self.masterId:
+                    self.con.command("[con_id=%s] focus" % window.id)
+                    self.con.command("floating toggle")
+
+           # Unfloat to simulate adding a window
+            for window in self.getWorkspaceCon().floating_nodes:
                 self.con.command("[con_id=%s] focus" % window.id)
                 self.con.command("floating toggle")
+                # Wait until the window is added
+                self.pushEvent.clear()
+                self.pushEvent.wait()
 
-       # Unfloat to simulate adding a window
-        for window in self.getWorkspaceCon().floating_nodes:
-            self.con.command("[con_id=%s] focus" % window.id)
-            self.con.command("floating toggle")
-            # Wait until the window is added
-            self.pushEvent.clear()
-            self.pushEvent.wait()
 
     def arrangeUntrackedWindows(self):
         '''
