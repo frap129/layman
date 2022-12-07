@@ -16,14 +16,22 @@ You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>. 
 """
 
+from dataclasses import dataclass
 from optparse import OptionParser
 import os
+from i3ipc import Event, Con
 
 from . import config
 
 class SimpleDict(dict):
     def __missing__(self, key):
         return None
+
+
+@dataclass
+class EventItem:
+    event: Event
+    con: Con | None
 
 
 def getCommaSeparatedArgs(option, opt, value, parser):

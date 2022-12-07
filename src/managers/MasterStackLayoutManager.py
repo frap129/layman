@@ -30,8 +30,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
     shortName = "MasterStack"
     overridesMoveBinds = True
 
-    def __init__(self, con, workspace, options):
-        super().__init__(con, workspace, options)
+    def __init__(self, workspace, options):
+        super().__init__(workspace, options)
         self.masterId = 0
         self.stackId = 0
         self.stack = deque([])
@@ -137,13 +137,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         # Float all untracked windows
         for window in self.getWorkspaceCon().leaves():
             if window.id not in self.stack and window.id != self.masterId:
-                self.con.command("[con_id=%s] focus" % window.id)
-                self.con.command("floating toggle")
+                self.con.command("[con_id=%s] floating toggle" % window.id)
 
        # Unfloat to simulate adding a window
         for window in self.getWorkspaceCon().floating_nodes:
-            self.con.command("[con_id=%s] focus" % window.id)
-            self.con.command("floating toggle")
+            self.con.command("[con_id=%s] floating toggle" % window.id)
             # Wait until the window is added
             self.pushEvent.clear()
             self.pushEvent.wait()

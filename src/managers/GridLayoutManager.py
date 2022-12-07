@@ -22,8 +22,8 @@ from .WorkspaceLayoutManager import WorkspaceLayoutManager
 class GridLayoutManager(WorkspaceLayoutManager):
     shortName = "Grid"
 
-    def __init__(self, con, workspace, options):
-        super().__init__(con, workspace, options)
+    def __init__(self, workspace, options):
+        super().__init__(workspace, options)
 
     def isExcluded(self, window):
         if window is None:

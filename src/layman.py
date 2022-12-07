@@ -66,7 +66,7 @@ class Layman:
 
         # Pass event to the layout manager
         self.log("Calling windowAdded for workspace %d" % workspace.num)
-        self.managers[workspace.num].windowAdded(event, window)
+        self.managers[workspace.num].eventQueue.put(utils.EventItem(event, window))
 
 
     def windowFocused(self, conn, event):
@@ -80,7 +80,7 @@ class Layman:
 
         # Pass command to the appropriate manager
         # log("windowFocused: Calling manager for workspace %d" % workspace.num)
-        self.managers[workspace.num].windowFocused(event, window)
+        self.managers[workspace.num].eventQueue.put(utils.EventItem(event, window))
 
 
     def windowClosed(self, conn, event):
@@ -104,7 +104,7 @@ class Layman:
         # Pass command to the appropriate manager
         self.log("Calling windowRemoved for workspace %d" % workspaceNum)
         window = utils.findFocusedWindow(self.cmdConn)
-        self.managers[workspaceNum].windowRemoved(event, window)
+        self.managers[workspaceNum].eventQueue.put(utils.EventItem(event, window))
 
 
     def windowMoved(self, conn, event):
@@ -115,13 +115,14 @@ class Layman:
             # Window moved within the same workspace, call windowMoved
             if not self.isExcluded(workspace):
                 self.log("Calling windowMoved for workspace %d" % workspace.num)
-                self.managers[workspace.num].windowMoved(event, window)
+                self.managers[workspace.num].eventQueue.put(utils.EventItem(event, window))
         else:
             # Call windowAdded on new workspace
             if not self.isExcluded(workspace):
                 self.log("Calling windowAdded for workspace %d" % workspace.num)
                 self.workspaceWindows[workspace.num].append(window.id)
-                self.managers[workspace.num].windowAdded(event, window)
+                event.change = "new"
+                self.managers[workspace.num].eventQueue.put(utils.EventItem(event, window))
 
             # Find old workspace
             for workspaceNum in self.workspaceWindows.keys():
@@ -130,7 +131,8 @@ class Layman:
                     if not self.isExcluded(workspace):
                         self.log("Calling windowRemoved for workspace %d" % workspaceNum)
                         self.workspaceWindows[workspaceNum].remove(window.id)
-                        self.managers[workspaceNum].windowRemoved(event, window)
+                        event.change = "close"
+                        self.managers[workspaceNum].eventQueue.put(utils.EventItem(event, window))
 
 
     def windowFloating(self, conn, event):
@@ -145,7 +147,7 @@ class Layman:
         # Only send windowFloating event if wlm supports it
         if self.managers[workspace.num].supportsFloating:
              self.log("Calling windowFloating for workspace %d" % workspace.num)
-             self.managers[workspace.num].windowFloating(event, window)
+             self.managers[workspace.num].eventQueue.put(utils.EventItem(event, window))
              return
 
         # Determine if window is floating
@@ -159,12 +161,14 @@ class Layman:
                 self.workspaceWindows[workspace.num].remove(window.id)
             except ValueError as e:
                 self.log("Wiondow not tracked in workspace")
-            self.managers[workspace.num].windowRemoved(event, window)
+            event.change = "close"
         else:
             # Window is not floating, treat like a new window
             self.log("Calling windowAdded for workspace %d" % workspace.num)
             self.workspaceWindows[workspace.num].append(window.id)
-            self.managers[workspace.num].windowAdded(event, window)
+            event.change = "new"
+
+        self.managers[workspace.num].eventQueue.put(utils.EventItem(event, window))
 
 
     """
@@ -199,7 +203,7 @@ class Layman:
 
         # Handle movement commands
         if "nop layman move" in command and self.managers[workspace.num].overridesMoveBinds:
-            self.managers[workspace.num].onBinding(command)
+            self.managers[workspace.num].eventQueue.put(utils.EventItem(event, None))
             self.log("Passed bind to manager on workspace %d" % workspace.num)
             return
         elif "nop layman move " in  command:
@@ -221,7 +225,7 @@ class Layman:
             shortName = command.split(' ')[-1]
             name = self.getLayoutNameByShortName(shortName)
             layout = getattr(self.userLayouts[name], name)
-            self.managers[workspace.num] = layout(self.cmdConn, workspace, self.options)
+            self.managers[workspace.num] = layout(workspace, self.options)
 
             self.log("Created %s on workspace %d" % (shortName, workspace.num))
             return
@@ -232,7 +236,7 @@ class Layman:
             return
             
         self.log("Calling manager for workspace %d" % workspace.num)
-        self.managers[workspace.num].onBinding(command)
+        self.managers[workspace.num].eventQueue.put(utils.EventItem(event, None))
 
 
     """
@@ -272,7 +276,7 @@ class Layman:
 
         layoutName = self.options.getForWorkspace(workspace.num, config.KEY_LAYOUT)
         name = self.getLayoutNameByShortName(layoutName)
-        self.managers[workspace.num] = getattr(self.userLayouts[name], name)(self.cmdConn, workspace, self.options)
+        self.managers[workspace.num] = getattr(self.userLayouts[name], name)(workspace, self.options)
         self.logCaller("Initialized workspace %d wth %s" % (workspace.num, self.managers[workspace.num].shortName))
 
         if workspace.num not in self.workspaceWindows:

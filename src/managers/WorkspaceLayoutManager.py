@@ -15,9 +15,14 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>. 
 """
+from i3ipc import Connection, BindingEvent, WorkspaceEvent, WindowEvent
 import inspect
+from logging import exception
+from queue import SimpleQueue
+from threading import Thread
 
 from ..config import KEY_DEBUG
+from ..utils import EventItem
 
 class WorkspaceLayoutManager:
     # These properties should be overriden to configure your WLM as
@@ -26,13 +31,39 @@ class WorkspaceLayoutManager:
     overridesMoveBinds = False # Should window movement commands be sent as binds
     supportsFloating = False # Should windowFloating be used, or treated as Added/Removed
 
+
     # These are the functions you should override for to implement a
     # WLM. 
-    def __init__(self, con, workspace, options):
-        self.con = con
+    def __init__(self, workspace, options):
+        self.con = Connection()
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
         self.debug = options.getForWorkspace(self.workspaceNum, KEY_DEBUG)
+        self.eventQueue = SimpleQueue()
+
+        thread = Thread(target=self.onEventAddedToQueue)
+        thread.start()
+
+
+    def onEventAddedToQueue(self):
+        while True:
+            item = self.eventQueue.get(True, None)
+            event = item.event
+            window = item.con
+            if type(event) == BindingEvent:
+                command = event.ipc_data["binding"]["command"].strip()
+                self.onBinding(command)
+            elif type(event) == WindowEvent:
+                if event.change == "new":
+                    self.windowAdded(event, window)
+                elif event.change == "focus":
+                    self.windowFocused(event, window)
+                elif event.change == "move":
+                    self.windowMoved(event, window)
+                elif event.change == "floating":
+                    self.windowFloating(event, window)
+                elif event.change == "close":
+                    self.windowRemoved(event, window)
 
 
     # windowAdded is called when a new window is added to the workpsace,
