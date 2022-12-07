@@ -186,23 +186,20 @@ class Layman:
     """
 
     def onBinding(self, conn, event):
-        # Exit early if binding isnt for slwm
+        # Handle chanined commands one at a time
         command = event.ipc_data["binding"]["command"].strip()
-        if "nop layman" not in command:
-            return
-            
-        # Check if we should pass this call to a manager
-        workspace = utils.findFocusedWorkspace(self.cmdConn)
-        if self.isExcluded(workspace):
-            self.log("Workspace or output excluded")
-            return
+        for command in command.split(";"):
+            command = command.strip()
+            workspace = utils.findFocusedWorkspace(self.cmdConn)
+            if "nop layman"in command and not self.isExcluded(workspace):
+                self.handleCommand(workspace, command)
+            else:
+                self.cmdConn.command(command)
 
+
+    def handleCommand(self, workspace, command):
         # Handle movement commands
-        if "nop layman move" in command and self.managers[workspace.num].overridesMoveBinds:
-            self.managers[workspace.num].onBinding(command)
-            self.log("Passed bind to manager on workspace %d" % workspace.num)
-            return
-        elif "nop layman move " in  command:
+        if "nop layman move" in command and not self.managers[workspace.num].overridesMoveBinds:
             moveCmd = command.replace("nop layman ", '')
             self.cmdConn.command(moveCmd)
             self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
@@ -222,7 +219,6 @@ class Layman:
             name = self.getLayoutNameByShortName(shortName)
             layout = getattr(self.userLayouts[name], name)
             self.managers[workspace.num] = layout(self.cmdConn, workspace, self.options)
-
             self.log("Created %s on workspace %d" % (shortName, workspace.num))
             return
 
