@@ -154,6 +154,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.pushEvent.wait()
 
 
+
     def arrangeUntrackedWindows(self):
         '''
         Floating the windows causes layman to send window added/removed events since
@@ -169,40 +170,40 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         leaves = topCon.leaves()
         masterCon = topCon.find_by_id(self.masterId)
         stackCon = topCon.find_by_id(self.stackId)
-        if len(leaves) > 2 and (masterCon is None or stackCon is None):
-            # Something's not right, I can feel it
-            self.arrangeUntrackedWindows()
-        elif len(topCon.nodes) == 1:
-            if len(leaves) > 1:
-                # Recurse until the first container with multiple nodes is found
-                self.pushWindow(window, topCon.nodes[0])
+        if stackCon is None:
+            if masterCon is None:
+                if len(leaves) > 1:
+                    # Something's not right, I can feel it
+                    self.arrangeUntrackedWindows()
+                else:
+                    # Only one window exists, make it master
+                    self.masterId = topCon.nodes[0].id
+                    self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
             else:
-                # Only one window exists, make it master
-                self.masterId = topCon.nodes[0].id
-                self.con.command("[con_id=%d] layout %s" % (topCon.id, "splith"))
-        elif len(topCon.nodes) == 2 and len (leaves) == 2:
-            # TODO: self.masterId should be set by now, why is masterCon none?
-            try:
                 # Only two windows, initialize stack. Start by getting master on the correct side
                 swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
                 swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
-            except:
-                swapLeft, swapRight = False, False
-            if swapLeft or swapRight:
-                self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, masterCon.id))
+                if swapLeft or swapRight:
+                    self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, masterCon.id))
 
-            # Create stack container
-            self.con.command("[con_id=%d] split vertical" % (masterCon.id))
-            self.con.command("[con_id=%d] layout %s" % (masterCon.id, self.stackLayout))
+                # Create stack container
+                self.con.command("[con_id=%d] split vertical" % (masterCon.id))
+                self.con.command("[con_id=%d] layout %s" % (masterCon.id, self.stackLayout))
 
-            # Refresh masterCon for updated parent
-            masterCon = self.getConById(masterCon.id)
-            self.masterId = window.id
-            self.stackId = masterCon.parent.id
-            self.log("New stackId: %d" % self.stackId)
-            self.stack.append(masterCon.id)
-            self.setMasterWidth()
-        elif len(topCon.nodes) > 2 or len(leaves) > (len(self.stack) + 1):
+                # Refresh masterCon for updated parent
+                masterCon = self.getConById(masterCon.id)
+                self.masterId = window.id
+                self.stackId = masterCon.parent.id
+                self.log("New stackId: %d" % self.stackId)
+                self.stack.append(masterCon.id)
+                self.setMasterWidth()
+        elif masterCon is None:
+            # No master, even though we have a stack for some reason.
+            self.arrangeUntrackedWindows()
+        elif topCon.nodes == 1 and len(leaves) > 1:
+            # Layout is wrapped in another container, recurse
+            self.pushWindow(window, topCon.nodes[0])
+        else:
             if len(topCon.nodes) > 2:
                 # New window in top container, move old master to stack
                 self.moveWindow(self.masterId, self.stack[-1])
