@@ -344,8 +344,3 @@ class Layman:
             logging.exception(e)
             self.eventConn.main_quit()
             self.init()
-
-
-# Start layman
-layman = Layman()
-layman.init()
