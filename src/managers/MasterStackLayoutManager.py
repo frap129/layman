@@ -182,9 +182,13 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.masterId = topCon.nodes[0].id
                 self.con.command("[con_id=%d] layout %s" % (topCon.id, "splith"))
         elif len(topCon.nodes) == 2 and len (leaves) == 2:
-            # Only two windows, initialize stack. Start by getting master on the correct side
-            swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
-            swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
+            # TODO: self.masterId should be set by now, why is masterCon none?
+            try:
+                # Only two windows, initialize stack. Start by getting master on the correct side
+                swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
+                swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
+            except:
+                swapLeft, swapRight = False, False
             if swapLeft or swapRight:
                 self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, masterCon.id))
 
