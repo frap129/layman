@@ -221,8 +221,13 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 topIndex = -1
 
             # Move the previous master to top of stack
-            while self.getConById(self.stackId).nodes[topIndex].id != self.masterId:
+            stackCon = self.getConById(self.masterId).parent
+            while stackCon is not None and stackCon.nodes[topIndex].id != self.masterId:
                 self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
+                stackCon = self.getConById(self.masterId).parent
+                if stackCon.id != self.stackId:
+                    self.moveWindow(self.masterId, self.stackId)
+                    stackCon = self.getConById(self.stackId)
 
             self.stack.append(self.masterId)
             self.log("New window on stack: %d" % self.masterId)
@@ -231,45 +236,52 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def popWindow(self, window, topCon):
-        if len(topCon.nodes) == 0:
-            # No windows, clear everything
-            self.stack.clear()
-            self.stackId = 0
-            self.masterId = 0
-        elif len(topCon.nodes) == 1:
-            if topCon.nodes[0] == self.stackId or topCon.find_by_id(self.masterId) is None:
-                # Master destroyed, pop from stack
-                self.masterId = self.stack.pop()
-                self.log("Master removed, popping %d from stack." % self.masterId)
-                if len(topCon.leaves()) == 1:
-                    # Stack empty, make last window master
-                    self.con.command("[con_id=%d] layout splith" % self.masterId)
-                    self.moveWindow(self.masterId, self.workspaceId)
+        leaves = topCon.leaves()
+        masterCon = topCon.find_by_id(self.masterId)
+        stackCon = topCon.find_by_id(self.stackId)
+        if stackCon is None:
+            if masterCon is None:
+                if len(leaves) > 0:
+                    # Something's not right, I can feel it
+                    self.arrangeUntrackedWindows()
+                else:
+                    # No windows, clear everything
                     self.stack.clear()
                     self.stackId = 0
-                else:
-                    moveDirection = "left" if self.stackSide == "right" else "right"
-                    self.con.command("[con_id=%id] focus")
-                    self.con.command("move %s" % moveDirection)
-                    self.setMasterWidth()
-            elif len(topCon.leaves()) > 1:
-                # Recurse until first container with multiple nodes i`s found
-                self.log("Top container seems to be nested, recursing")
-                self.popWindow(window, topCon.nodes[0])
-            elif len(topCon.leaves()) == 1:
+                    self.masterId = 0
+            else:
                 # Only one window remains
                 self.log("Single window, making it master.")
                 self.masterId = topCon.nodes[0].id
                 self.stackId = 0
                 self.stack.clear()
-        elif len(topCon.nodes) == 2:
+        elif masterCon is None:
+            # Master destroyed, pop from stack
+            self.masterId = self.stack.pop()
+            self.log("Master removed, popping %d from stack." % self.masterId)
+            if len(leaves) == 1:
+                # Stack empty, make last window master
+                self.con.command("[con_id=%d] layout splith" % self.masterId)
+                self.moveWindow(self.masterId, self.workspaceId)
+                self.stack.clear()
+                self.stackId = 0
+            else:
+                moveDirection = "left" if self.stackSide == "right" else "right"
+                self.con.command("[con_id=%id] focus")
+                self.con.command("move %s" % moveDirection)
+                self.setMasterWidth()
+        elif topCon.nodes == 1 and len(leaves) > 1:
+            # Layout is wrapped in another container, recurse
+            self.popWindow(window, topCon.nodes[0])
+        else:
             # A stack item was destroyed
             self.setMasterWidth()
-            allWindowIds = {window.id for window in topCon.leaves()}
+            allWindowIds = {window.id for window in leaves}
             for id in self.stack:
                 if id not in allWindowIds:
                     self.stack.remove(id)
                     break
+
 
     def toggleStackLayout(self):
         # Pick next stack layout
