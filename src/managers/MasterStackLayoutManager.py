@@ -25,13 +25,12 @@ KEY_MASTER_WIDTH = "masterWidth"
 KEY_STACK_LAYOUT = "stackLayout"
 KEY_STACK_SIDE = "stackSide"
 
-# Lock to prevent multiple instances from arranging at once
-arranging = threading.Lock()
 
 class MasterStackLayoutManager(WorkspaceLayoutManager):
     shortName = "MasterStack"
     overridesMoveBinds = True
-
+    # Lock to prevent multiple instances from arranging at once
+    arranging = threading.Lock()
 
     def __init__(self, con, workspace, options):
         super().__init__(con, workspace, options)
@@ -139,7 +138,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def floatToggleUntrackedWindows(self):
-        with arranging:
+        with MasterStackLayoutManager.arranging:
             # Float all untracked windows
             for window in self.getWorkspaceCon().leaves():
                 if window.id not in self.stack and window.id != self.masterId:
