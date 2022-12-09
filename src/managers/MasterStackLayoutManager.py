@@ -15,6 +15,7 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>.
 """
+from i3ipc import Connection
 import threading
 from time import sleep
 from collections import deque
@@ -68,7 +69,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.popWindow(window, topCon)
 
         self.log("Removed window id: %d" % window.id)
-        self.con.command("[con_id=%d] focus" % self.masterId)
 
 
     def windowFocused(self, event, window):
@@ -139,20 +139,23 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def floatToggleUntrackedWindows(self):
         with MasterStackLayoutManager.arranging:
+            conn = Connection()
+            leaves = conn.get_tree().find_by_id(self.workspaceId).leaves()
             # Float all untracked windows
-            for window in self.getWorkspaceCon().leaves():
+            for window in leaves:
                 if window.id not in self.stack and window.id != self.masterId:
                     self.con.command("[con_id=%s] focus" % window.id)
-                    self.con.command("floating toggle")
+                    self.con.command("floating enable")
 
-           # Unfloat to simulate adding a window
-            for window in self.getWorkspaceCon().floating_nodes:
+            # Unfloat to simulate adding a window
+            sleep(0.05)
+            floating = conn.get_tree().find_by_id(self.workspaceId).floating_nodes
+            for window in floating:
                 self.con.command("[con_id=%s] focus" % window.id)
-                self.con.command("floating toggle")
+                self.con.command("floating disable")
                 # Wait until the window is added
                 self.pushEvent.clear()
                 self.pushEvent.wait()
-
 
 
     def arrangeUntrackedWindows(self):
@@ -175,9 +178,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 if len(leaves) > 1:
                     # Something's not right, I can feel it
                     self.arrangeUntrackedWindows()
-                else:
+                elif leaves != 0:
                     # Only one window exists, make it master
-                    self.masterId = topCon.nodes[0].id
+                    self.masterId = leaves[0].id
                     self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
             else:
                 # Only two windows, initialize stack. Start by getting master on the correct side

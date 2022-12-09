@@ -16,7 +16,7 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>. 
 """
-from i3ipc import Event, Connection, BindingEvent, WorkspaceEvent, WindowEvent
+from i3ipc import Event, Connection
 from importlib.machinery import SourceFileLoader
 import inspect
 import logging
@@ -83,7 +83,7 @@ class Layman:
 
         # Fallback to focused workspace if the window wasn't tracked
         if workspaces == []:
-            workspace = utils.findFocusedWorkspace(self.cmdConn).num
+            workspace = utils.findFocusedWorkspace(self.cmdConn)
         else:
             workspace = workspaces[0]
 
@@ -116,6 +116,7 @@ class Layman:
                     # Call windowRemoved on old workspace
                     event.change = "close"
                     self.dispatchToManager(event, window, workspace)
+
 
     def windowFloating(self, _, event):
         window = self.cmdConn.get_tree().find_by_id(event.container.id)
@@ -260,6 +261,7 @@ class Layman:
                 try:
                     module = SourceFileLoader(className, layoutPath + "/" + file).load_module()
                     self.userLayouts[className] = module
+                    self.log("Loaded user layout %s" % self.userLayouts[className].shortName)
                 except ImportError:
                     self.log("Layout not found: " + className)
 
