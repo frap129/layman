@@ -47,7 +47,7 @@ class Layman:
     window::new, window::focus, window::close, window::move, and window::floating.
     """
 
-    def windowCreated(self, conn, event):
+    def windowCreated(self, _, event):
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -60,7 +60,7 @@ class Layman:
         self.dispatchToManager(event, window, workspace)
 
 
-    def windowFocused(self, conn, event):
+    def windowFocused(self, _, event):
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -72,7 +72,7 @@ class Layman:
         # Pass command to the appropriate manager
         self.dispatchToManager(event, window, workspace)
 
-    def windowClosed(self, conn, event):
+    def windowClosed(self, _, event):
         # Try to find workspace by locating where the window is recorded
         workspaces = []
         for num in self.workspaceWindows:
@@ -95,7 +95,7 @@ class Layman:
         self.dispatchToManager(event, window, workspace)
 
 
-    def windowMoved(self, conn, event):
+    def windowMoved(self, _, event):
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -117,7 +117,7 @@ class Layman:
                     event.change = "close"
                     self.dispatchToManager(event, window, workspace)
 
-    def windowFloating(self, conn, event):
+    def windowFloating(self, _, event):
         window = self.cmdConn.get_tree().find_by_id(event.container.id)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -151,7 +151,7 @@ class Layman:
     workspace::init and workspace::focus.
     """
 
-    def workspaceInit(self, conn, event):
+    def workspaceInit(self, _, event):
         if not self.isExcluded(event.current):
             self.setWorkspaceLayoutManager(event.current)
 
@@ -162,7 +162,7 @@ class Layman:
     the binding command or passing it to the intended workspace layout manager.
     """
 
-    def onBinding(self, conn, event):
+    def onBinding(self, _, event):
         # Handle chanined commands one at a time
         command = event.ipc_data["binding"]["command"].strip()
         if "nop layman" in command:
