@@ -156,6 +156,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 # Wait until the window is added
                 self.pushEvent.clear()
                 self.pushEvent.wait()
+                sleep(0.05)
             self.setMasterWidth()
 
 
@@ -179,7 +180,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 if len(leaves) > 1:
                     # Something's not right, I can feel it
                     self.arrangeUntrackedWindows()
-                elif leaves != 0:
+                elif len(leaves) > 0:
                     # Only one window exists, make it master
                     self.masterId = leaves[0].id
                     self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
