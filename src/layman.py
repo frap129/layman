@@ -56,17 +56,8 @@ class Layman:
             self.log("Workspace or output excluded")
             return
 
-        # Check if we have a layoutmanager
-        if workspace.num not in self.managers:
-            self.log("No manager for workpsace %d, ignoring" % workspace.num)
-            self.setWorkspaceLayoutManager(workspace)
-
-        # Store window
-        self.workspaceWindows[workspace.num].append(window.id)
-
-        # Pass event to the layout manager
-        self.log("Calling windowAdded for workspace %d" % workspace.num)
-        self.managers[workspace.num].windowAdded(event, window)
+        # Pass event to the appropriate manager
+        self.dispatchToManager(event, window, workspace)
 
 
     def windowFocused(self, conn, event):
@@ -79,59 +70,52 @@ class Layman:
             return
 
         # Pass command to the appropriate manager
-        # log("windowFocused: Calling manager for workspace %d" % workspace.num)
-        self.managers[workspace.num].windowFocused(event, window)
-
+        self.dispatchToManager(event, window, workspace)
 
     def windowClosed(self, conn, event):
-        # Try to find workspace num by locating where the window is recorded
-        workspaceNum = None
+        # Try to find workspace by locating where the window is recorded
+        workspaces = []
         for num in self.workspaceWindows:
             if event.container.id in self.workspaceWindows[num]:
-                workspaceNum = num
+                workspaces = self.cmdConn.get_tree().workspaces()
+                workspaces = [x for x in workspaces if x.num == num]
                 break
 
         # Fallback to focused workspace if the window wasn't tracked
-        if workspaceNum is None:
-            workspaceNum = utils.findFocusedWorkspace(self.cmdConn).num
+        if workspaces == []:
+            workspace = utils.findFocusedWorkspace(self.cmdConn).num
+        else:
+            workspace = workspaces[0]
 
-        # Remove window
-        try:
-            self.workspaceWindows[workspaceNum].remove(event.container.id)
-        except BaseException as e:
-            self.log("Untracked window %d closed on %d" % (event.container.id, workspaceNum))
+        if self.isExcluded(workspace):
+            return
 
         # Pass command to the appropriate manager
-        self.log("Calling windowRemoved for workspace %d" % workspaceNum)
         window = utils.findFocusedWindow(self.cmdConn)
-        self.managers[workspaceNum].windowRemoved(event, window)
+        self.dispatchToManager(event, window, workspace)
 
 
     def windowMoved(self, conn, event):
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
+        if self.isExcluded(workspace):
+            return
+
         if window.id in self.workspaceWindows[workspace.num]:
             # Window moved within the same workspace, call windowMoved
-            if not self.isExcluded(workspace):
-                self.log("Calling windowMoved for workspace %d" % workspace.num)
-                self.managers[workspace.num].windowMoved(event, window)
+            self.dispatchToManager(event, window, workspace)
         else:
             # Call windowAdded on new workspace
-            if not self.isExcluded(workspace):
-                self.log("Calling windowAdded for workspace %d" % workspace.num)
-                self.workspaceWindows[workspace.num].append(window.id)
-                self.managers[workspace.num].windowAdded(event, window)
+            event.change = "new"
+            self.dispatchToManager(event, window, workspace)
 
             # Find old workspace
             for workspaceNum in self.workspaceWindows.keys():
                 if window.id in self.workspaceWindows[workspaceNum]:
                     # Call windowRemoved on old workspace
-                    if not self.isExcluded(workspace):
-                        self.log("Calling windowRemoved for workspace %d" % workspaceNum)
-                        self.workspaceWindows[workspaceNum].remove(window.id)
-                        self.managers[workspaceNum].windowRemoved(event, window)
-
+                    event.change = "close"
+                    self.dispatchToManager(event, window, workspace)
 
     def windowFloating(self, conn, event):
         window = self.cmdConn.get_tree().find_by_id(event.container.id)
@@ -144,8 +128,7 @@ class Layman:
 
         # Only send windowFloating event if wlm supports it
         if self.managers[workspace.num].supportsFloating:
-             self.log("Calling windowFloating for workspace %d" % workspace.num)
-             self.managers[workspace.num].windowFloating(event, window)
+             self.dispatchToManager(event, window, workspace) 
              return
 
         # Determine if window is floating
@@ -154,18 +137,12 @@ class Layman:
 
         if swayFloating or i3Floating:
             # Window floating, treat like its closed
-            self.log("Calling windowRemoved for workspace %d" % workspace.num)
-            try:
-                self.workspaceWindows[workspace.num].remove(window.id)
-            except ValueError as e:
-                self.log("Wiondow not tracked in workspace")
-            self.managers[workspace.num].windowRemoved(event, window)
+           event.change = "close"
+           self.dispatchToManager(event, window, workspace)
         else:
             # Window is not floating, treat like a new window
-            self.log("Calling windowAdded for workspace %d" % workspace.num)
-            self.workspaceWindows[workspace.num].append(window.id)
-            self.managers[workspace.num].windowAdded(event, window)
-
+            event.change = "new"
+            self.dispatchToManager(event, window, workspace)
 
     """
     Workspace Events
@@ -238,6 +215,34 @@ class Layman:
     The following section of code handles miscellaneous tasks needed by the event
     handlers above.
     """
+
+    def dispatchToManager(self, event, window, workspace):
+        manager = self.managers[workspace.num]
+        try:
+            if event.change == "new":
+                self.logCaller("Calling windowAdded for workspace %d" % workspace.num)
+                self.workspaceWindows[workspace.num].append(window.id)
+                manager.windowAdded(event, window)
+            elif event.change == "focus":
+                self.logCaller("Calling windowFocused for workspace %d" % workspace.num)
+                manager.windowFocused(event, window)
+            elif event.change == "move":
+                self.logCaller("Calling windowMoved for workspace %d" % workspace.num)
+                manager.windowMoved(event, window)
+            elif event.change == "floating":
+                self.logCaller("Calling windowFloating for workspace %d" % workspace.num)
+                manager.windowFloating(event, window)
+            elif event.change == "close":
+                try:
+                    self.logCaller("Calling windowRemoved for workspace %d" % workspace.num)
+                    self.workspaceWindows[workspace.num].remove(window.id)
+                except:
+                    self.log("Window not tracked in workspace")
+                manager.windowRemoved(event, window)
+        except BaseException as e:
+            logging.exception(e)
+            self.setWorkspaceLayoutManager(workspace)
+
 
     def fetchLayouts(self):
         # Get builtin layouts
