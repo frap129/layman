@@ -311,10 +311,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         moveToLeft = stackCon.rect.x > masterCon.rect.x and self.stackSide == "left"
 
         if stackCon is not None and masterCon is not None:
-            if stackCon.rect.x == masterCon.rect.x:
-                # Master has incorrect layout
-                self.con.command("[con_id=%d] layout splith" % self.masterId)
-            elif moveToLeft or moveToRight:
+            self.con.command("[con_id=%d] layout splith" % self.masterId)
+            if moveToLeft or moveToRight:
                 self.con.command("[con_id=%d] swap container with con_id %d" % (self.stackId, self.masterId))
                 self.setMasterWidth()
 
