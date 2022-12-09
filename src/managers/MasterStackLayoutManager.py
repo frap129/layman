@@ -156,6 +156,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 # Wait until the window is added
                 self.pushEvent.clear()
                 self.pushEvent.wait()
+            self.setMasterWidth()
 
 
     def arrangeUntrackedWindows(self):
