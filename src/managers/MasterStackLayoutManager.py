@@ -205,7 +205,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         elif masterCon is None:
             # No master, even though we have a stack for some reason.
             self.arrangeUntrackedWindows()
-        elif topCon.nodes == 1 and len(leaves) > 1:
+        elif len(topCon.nodes) == 1 and len(leaves) > 1:
             # Layout is wrapped in another container, recurse
             self.pushWindow(window, topCon.nodes[0])
         else:
@@ -275,7 +275,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.con.command("[con_id=%id] focus")
                 self.con.command("move %s" % moveDirection)
                 self.setMasterWidth()
-        elif topCon.nodes == 1 and len(leaves) > 1:
+        elif len(topCon.nodes) == 1 and len(leaves) > 1:
             # Layout is wrapped in another container, recurse
             self.popWindow(window, topCon.nodes[0])
         else:
