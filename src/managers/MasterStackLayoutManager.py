@@ -15,9 +15,6 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>.
 """
-from i3ipc import Connection
-import threading
-from time import sleep
 from collections import deque
 
 from .WorkspaceLayoutManager import WorkspaceLayoutManager
@@ -30,8 +27,6 @@ KEY_STACK_SIDE = "stackSide"
 class MasterStackLayoutManager(WorkspaceLayoutManager):
     shortName = "MasterStack"
     overridesMoveBinds = True
-    # Lock to prevent multiple instances from arranging at once
-    arranging = threading.Lock()
 
     def __init__(self, con, workspace, options):
         super().__init__(con, workspace, options)
@@ -43,7 +38,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackSide = options.getForWorkspace(self.workspaceNum, KEY_STACK_SIDE) or "right"
 
         # If windows exist, fit them into MasterStack
-        self.pushEvent = threading.Event()
         self.arrangeUntrackedWindows()
 
 
@@ -57,7 +51,6 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         self.log("Added window id: %d" % window.id)
         self.con.command("[con_id=%d] focus" % self.masterId)
-        self.pushEvent.set() # Unblock the arrange thread
 
 
     def windowRemoved(self, event, window):
@@ -137,38 +130,28 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
 
 
-    def floatToggleUntrackedWindows(self):
-        with MasterStackLayoutManager.arranging:
-            conn = Connection()
-            leaves = conn.get_tree().find_by_id(self.workspaceId).leaves()
-            # Float all untracked windows
-            for window in leaves:
-                if window.id not in self.stack and window.id != self.masterId:
-                    self.con.command("[con_id=%s] focus" % window.id)
-                    self.con.command("floating enable")
-
-            # Unfloat to simulate adding a window
-            sleep(0.05)
-            floating = conn.get_tree().find_by_id(self.workspaceId).floating_nodes
-            for window in floating:
-                self.con.command("[con_id=%s] focus" % window.id)
-                self.con.command("floating disable")
-                # Wait until the window is added
-                self.pushEvent.clear()
-                self.pushEvent.wait()
-                sleep(0.05)
-            self.setMasterWidth()
-
-
     def arrangeUntrackedWindows(self):
-        '''
-        Floating the windows causes layman to send window added/removed events since
-        this layout doesnt support floating windows. By floating windows on a separate
-        thread, we can reinsert them and let the layout handle them correctly. Doing
-        this on the same thread would block the layout from handling events.
-        '''
-        thread = threading.Thread(target=self.floatToggleUntrackedWindows)
-        thread.start()
+        self.log("Arranging untrackedWindows")
+        untracked = [x for x in self.getWorkspaceCon().leaves() if x.id not in self.stack or x.id != self.masterId]
+        for window in untracked:
+            if self.stackId == 0:
+                if self.masterId == 0:
+                    self.masterId = window.id
+                else:
+                    self.con.command("[con_id=%d] split none, layout splith" % self.masterId)
+                    self.moveWindow(window.id, self.masterId)
+                    self.con.command("[con_id=%d] split vertical, layout %s" % (self.masterId, self.stackLayout))
+                    self.stack.append(self.masterId)
+                    self.stackId = self.getConById(self.masterId).parent.id
+                    self.masterId = window.id
+            else:
+                self.con.command("[con_id=%d] split none, layout splith" % self.masterId)
+                self.moveWindow(window.id, self.masterId)
+                self.stack.append(self.masterId)
+                self.moveWindow(self.masterId, self.stackId)
+                self.moveToTopOfStack(self.masterId)
+                self.masterId = window.id
+        self.setStackSide()
 
 
     def pushWindow(self, window, topCon):
@@ -182,21 +165,21 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                     self.arrangeUntrackedWindows()
                 elif len(leaves) > 0:
                     # Only one window exists, make it master
-                    self.masterId = leaves[0].id
+                    self.masterId = window.id
                     self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
             else:
                 # Only two windows, initialize stack. Start by getting master on the correct side
                 swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
                 swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
                 if swapLeft or swapRight:
-                    self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, masterCon.id))
+                    self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, self.masterId))
 
                 # Create stack container
-                self.con.command("[con_id=%d] split vertical" % (masterCon.id))
-                self.con.command("[con_id=%d] layout %s" % (masterCon.id, self.stackLayout))
+                self.con.command("[con_id=%d] split vertical" % (self.masterId))
+                self.con.command("[con_id=%d] layout %s" % (self.masterId, self.stackLayout))
 
                 # Refresh masterCon for updated parent
-                masterCon = self.getConById(masterCon.id)
+                masterCon = self.getConById(self.masterId)
                 self.masterId = window.id
                 self.stackId = masterCon.parent.id
                 self.log("New stackId: %d" % self.stackId)
@@ -216,28 +199,31 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 # New window in stack, swap with master
                 self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, self.masterId))
 
-            # The top of a tabbed layout is the closest to master, handle that
-            moveDirection = "up"
-            topIndex = 0
-            if self.stackLayout == "tabbed" and self.stackSide == "right":
-                moveDirection = "left"
-            elif self.stackLayout == "tabbed" and self.stackSide == "left":
-                moveDirection = "right"
-                topIndex = -1
-
-            # Move the previous master to top of stack
-            stackCon = self.getConById(self.masterId).parent
-            while stackCon is not None and stackCon.nodes[topIndex].id != self.masterId:
-                self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
-                stackCon = self.getConById(self.masterId).parent
-                if stackCon.id != self.stackId:
-                    self.moveWindow(self.masterId, self.stackId)
-                    stackCon = self.getConById(self.stackId)
-
+            self.moveToTopOfStack(self.masterId)
             self.stack.append(self.masterId)
             self.log("New window on stack: %d" % self.masterId)
             self.masterId = window.id
             self.setMasterWidth()
+
+
+    def moveToTopOfStack(self, windowId):
+        # The top of a tabbed layout is the closest to master, handle that
+        moveDirection = "up"
+        topIndex = 0
+        if self.stackLayout == "tabbed" and self.stackSide == "right":
+            moveDirection = "left"
+        elif self.stackLayout == "tabbed" and self.stackSide == "left":
+            moveDirection = "right"
+            topIndex = -1
+
+        # Move the previous master to top of stack
+        stackCon = self.getConById(windowId).parent
+        while stackCon is not None and stackCon.nodes[topIndex].id != windowId:
+            self.con.command("[con_id=%d] move %s" % (windowId, moveDirection))
+            stackCon = self.getConById(windowId).parent
+            if stackCon.id != self.stackId:
+                self.moveWindow(windowId, self.stackId)
+                stackCon = self.getConById(self.stackId)
 
 
     def popWindow(self, window, topCon):
@@ -307,6 +293,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def toggleStackSide(self):
         self.stackSide = "left" if self.stackSide == "right" else "right"
+        self.setStackSide()
+
+    def setStackSide(self):
         stackCon = self.getConById(self.stackId)
         masterCon = self.getConById(self.masterId)
         moveToRight = stackCon.rect.x < masterCon.rect.x and self.stackSide == "right"
