@@ -35,7 +35,8 @@ def findFocusedWindow(con):
 
 
 def findFocusedWorkspace(con):
-    return con.get_tree().find_focused().workspace()
+    window = findFocusedWindow(con)
+    return None if window is None else window.workspace()
 
 
 def getConfigPath():

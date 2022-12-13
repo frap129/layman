@@ -201,8 +201,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             else:
                 moveDirection = "left" if self.stackSide == "right" else "right"
                 self.con.command("[con_id=%id] focus")
-                while self.getConById(self.masterId).parent.id == self.stackId:
-                    self.con.command("move %s" % moveDirection)
+                try:
+                    while self.getConById(self.masterId).parent.id == self.stackId:
+                        self.con.command("move %s" % moveDirection)
+                except AttributeError:
+                    self.log("New master %d moved out of stack" % self.masterId)
                 self.setMasterWidth()
         elif len(topCon.nodes) == 1 and len(leaves) > 1:
             # Layout is wrapped in another container, recurse
@@ -275,8 +278,11 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             else:
                 moveDirection = "left" if self.stackSide == "right" else "right"
                 self.con.command("[con_id=%id] focus")
-                while self.getConById(self.masterId).parent.id == self.stackId:
-                    self.con.command("move %s" % moveDirection)
+                try:
+                    while self.getConById(self.masterId).parent.id == self.stackId:
+                        self.con.command("move %s" % moveDirection)
+                except AttributeError:
+                    self.log("New master %d moved out of stack" % self.masterId)
                 self.setMasterWidth()
         elif len(topCon.nodes) == 1 and len(leaves) > 1:
             # Layout is wrapped in another container, recurse
