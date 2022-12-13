@@ -163,53 +163,50 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.setMasterWidth()
 
 
+    def initMaster(self, window):
+        self.masterId = window.id
+        self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
+
+
+    def initStack(self, window, masterCon):
+        # Start by getting master on the correct side
+        swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
+        swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
+        if swapLeft or swapRight:
+            self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, self.masterId))
+
+        # Create stack container
+        self.con.command("[con_id=%d] split vertical" % (self.masterId))
+        self.con.command("[con_id=%d] layout %s" % (self.masterId, self.stackLayout))
+
+        # Refresh masterCon for updated parent
+        masterCon = self.getConById(self.masterId)
+        self.masterId = window.id
+        self.stackId = masterCon.parent.id
+        self.log("New stackId: %d" % self.stackId)
+        self.stack.append(masterCon.id)
+        self.setMasterWidth()
+
+
     def pushWindow(self, window, topCon):
         leaves = topCon.leaves()
         masterCon = topCon.find_by_id(self.masterId)
         stackCon = topCon.find_by_id(self.stackId)
         if stackCon is None:
             if masterCon is None:
-                if len(leaves) > 1:
+                if len(leaves) > 0:
                     # Something's not right, I can feel it
                     self.arrangeUntrackedWindows()
-                elif len(leaves) > 0:
+                elif len(leaves) > -1:
                     # Only one window exists, make it master
-                    self.masterId = window.id
-                    self.con.command("[con_id=%d] layout %s" % (self.masterId, "splith"))
+                    self.initMaster(window)
             else:
-                # Only two windows, initialize stack. Start by getting master on the correct side
-                swapRight = window.rect.x > masterCon.rect.x and self.stackSide == "right"
-                swapLeft = window.rect.x < masterCon.rect.x and self.stackSide == "left"
-                if swapLeft or swapRight:
-                    self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, self.masterId))
-
-                # Create stack container
-                self.con.command("[con_id=%d] split vertical" % (self.masterId))
-                self.con.command("[con_id=%d] layout %s" % (self.masterId, self.stackLayout))
-
-                # Refresh masterCon for updated parent
-                masterCon = self.getConById(self.masterId)
-                self.masterId = window.id
-                self.stackId = masterCon.parent.id
-                self.log("New stackId: %d" % self.stackId)
-                self.stack.append(masterCon.id)
-                self.setMasterWidth()
+                # Only two windows, initialize stack.
+                self.initStack(window, masterCon)
         elif masterCon is None:
             # No master, even though we have a stack for some reason.
+            self.popFromStack(window.id, leaves)
             self.masterId = window.id
-            if len(leaves) == 1:
-                self.con.command("[con_id=%d] layout splith" % self.masterId)
-                self.moveWindow(self.masterId, self.workspaceId)
-                self.stack.clear()
-                self.stackId = 0
-            else:
-                moveDirection = "left" if self.stackSide == "right" else "right"
-                try:
-                    while self.getConById(self.masterId).parent.id == self.stackId:
-                        self.con.command("[con_id=%id] move %s" % (self.masterId, moveDirection))
-                except AttributeError:
-                    self.log("New master %d moved out of stack" % self.masterId)
-                self.setMasterWidth()
         elif len(topCon.nodes) == 1 and len(leaves) > 1:
             # Layout is wrapped in another container, recurse
             self.pushWindow(window, topCon.nodes[0])
@@ -248,6 +245,26 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 stackCon = self.getConById(self.stackId)
 
 
+    def popFromStack(self, windowId, leaves):
+        # Master destroyed, pop from stack
+        self.masterId = windowId
+        self.log("Master removed, popping %d from stack." % self.masterId)
+        if len(leaves) == 1:
+            # Stack empty, make last window master
+            self.con.command("[con_id=%d] layout splith" % self.masterId)
+            self.moveWindow(self.masterId, self.workspaceId)
+            self.stack.clear()
+            self.stackId = 0
+        else:
+            moveDirection = "left" if self.stackSide == "right" else "right"
+            try:
+                while self.getConById(self.masterId).parent.id == self.stackId:
+                    self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
+            except AttributeError:
+                self.log("New master %d moved out of stack" % self.masterId)
+        self.setMasterWidth()
+
+
     def popWindow(self, window, topCon):
         leaves = topCon.leaves()
         masterCon = topCon.find_by_id(self.masterId)
@@ -270,22 +287,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.stack.clear()
         elif masterCon is None:
             # Master destroyed, pop from stack
-            self.masterId = self.stack.pop()
-            self.log("Master removed, popping %d from stack." % self.masterId)
-            if len(leaves) == 1:
-                # Stack empty, make last window master
-                self.con.command("[con_id=%d] layout splith" % self.masterId)
-                self.moveWindow(self.masterId, self.workspaceId)
-                self.stack.clear()
-                self.stackId = 0
-            else:
-                moveDirection = "left" if self.stackSide == "right" else "right"
-                try:
-                    while self.getConById(self.masterId).parent.id == self.stackId:
-                        self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
-                except AttributeError:
-                    self.log("New master %d moved out of stack" % self.masterId)
-                self.setMasterWidth()
+            newMaster = self.stack.pop()
+            self.popFromStack(newMaster, leaves)
         elif len(topCon.nodes) == 1 and len(leaves) > 1:
             # Layout is wrapped in another container, recurse
             self.popWindow(window, topCon.nodes[0])
@@ -319,6 +322,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
     def toggleStackSide(self):
         self.stackSide = "left" if self.stackSide == "right" else "right"
         self.setStackSide()
+
 
     def setStackSide(self):
         stackCon = self.getConById(self.stackId)
