@@ -148,12 +148,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 else:
                     self.initStack(window)
             else:
-                self.con.command("[con_id=%d] split none, layout splith" % self.masterId)
-                self.moveWindow(window.id, self.masterId)
-                self.stack.append(self.masterId)
-                self.moveWindow(self.masterId, self.stackId)
-                self.moveToTopOfStack(self.masterId)
-                self.masterId = window.id
+                self.pushMasterToStack(window) 
         self.setStackSide()
 
 
@@ -170,6 +165,15 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.stackId = self.getConById(self.masterId).parent.id
         self.masterId = window.id
         self.setStackSide()
+
+
+    def pushMasterToStack(self, window):
+        self.con.command("[con_id=%d] split none, layout splith" % self.masterId)
+        self.moveWindow(window.id, self.masterId)
+        self.stack.append(self.masterId)
+        self.moveWindow(self.masterId, self.stackId)
+        self.moveToTopOfStack(self.masterId)
+        self.masterId = window.id
 
 
     def pushWindow(self, window, topCon):
@@ -195,17 +199,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             # Layout is wrapped in another container, recurse
             self.pushWindow(window, topCon.nodes[0])
         else:
-            if len(topCon.nodes) > 2:
-                # New window in top container, move old master to stack
-                self.moveWindow(self.masterId, self.stack[-1])
-            elif len(leaves) > (len(self.stack) + 1):
-                # New window in stack, swap with master
-                self.con.command("[con_id=%d] swap container with con_id %d" % (window.id, self.masterId))
-
-            self.moveToTopOfStack(self.masterId)
-            self.stack.append(self.masterId)
-            self.log("New window on stack: %d" % self.masterId)
-            self.masterId = window.id
+            self.pushMasterToStack(window)
             self.setMasterWidth()
 
 
