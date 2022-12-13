@@ -131,8 +131,12 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def arrangeUntrackedWindows(self):
+        leaves = self.getWorkspaceCon().leaves()
+        if len(leaves) == 0:
+            return;
+
         self.log("Arranging untrackedWindows")
-        untracked = [x for x in self.getWorkspaceCon().leaves() if x.id not in self.stack or x.id != self.masterId]
+        untracked = [x for x in reversed(leaves) if x.id not in self.stack or x.id != self.masterId]
         for window in untracked:
             if self.stackId == 0:
                 if self.masterId == 0:
@@ -152,6 +156,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.moveToTopOfStack(self.masterId)
                 self.masterId = window.id
         self.setStackSide()
+        self.setMasterWidth()
 
 
     def pushWindow(self, window, topCon):
