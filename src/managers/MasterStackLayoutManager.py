@@ -204,10 +204,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.stackId = 0
             else:
                 moveDirection = "left" if self.stackSide == "right" else "right"
-                self.con.command("[con_id=%id] focus")
                 try:
                     while self.getConById(self.masterId).parent.id == self.stackId:
-                        self.con.command("move %s" % moveDirection)
+                        self.con.command("[con_id=%id] move %s" % (self.masterId, moveDirection))
                 except AttributeError:
                     self.log("New master %d moved out of stack" % self.masterId)
                 self.setMasterWidth()
@@ -281,10 +280,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
                 self.stackId = 0
             else:
                 moveDirection = "left" if self.stackSide == "right" else "right"
-                self.con.command("[con_id=%id] focus")
                 try:
                     while self.getConById(self.masterId).parent.id == self.stackId:
-                        self.con.command("move %s" % moveDirection)
+                        self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
                 except AttributeError:
                     self.log("New master %d moved out of stack" % self.masterId)
                 self.setMasterWidth()
