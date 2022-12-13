@@ -46,6 +46,10 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         if self.isExcluded(window):
             return
 
+        # Don't add duplicate windows
+        if window.id == self.masterId or window.id in self.stack:
+            return
+
         topCon = self.getWorkspaceCon()
         self.pushWindow(window, topCon)
 
