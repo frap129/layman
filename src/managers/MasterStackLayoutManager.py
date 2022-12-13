@@ -327,6 +327,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
     def setStackSide(self):
         stackCon = self.getConById(self.stackId)
         masterCon = self.getConById(self.masterId)
+        if stackCon is None or masterCon is None:
+            return
         moveToRight = stackCon.rect.x < masterCon.rect.x and self.stackSide == "right"
         moveToLeft = stackCon.rect.x > masterCon.rect.x and self.stackSide == "left"
 
