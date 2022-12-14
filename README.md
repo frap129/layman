@@ -21,6 +21,8 @@ I intend to provide installation through PyPi using pip, however the original na
 being too similar to another package, swmm. After rebranding to `layman`, the name is still forbidden for an unkown reason.
 Until this is resolved, please use the instructions below.
 
+For Arch users, `layman-git` is available [on the AUR](https://aur.archlinux.org/packages/layman-git) courtesy of [matclab](https://github.com/matclab)
+
 ## Installing from source
 ```
 git clone https://github.com/frap129/layman
