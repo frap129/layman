@@ -17,6 +17,7 @@ layman. If not, see <https://www.gnu.org/licenses/>.
 """
 import inspect
 
+from ..command import CommandBuilder
 from ..config import KEY_DEBUG
 
 class WorkspaceLayoutManager:
@@ -30,6 +31,7 @@ class WorkspaceLayoutManager:
     # WLM. 
     def __init__(self, con, workspace, options):
         self.con = con
+        self.command = CommandBuilder(con)
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
         self.debug = options.getForWorkspace(self.workspaceNum, KEY_DEBUG)

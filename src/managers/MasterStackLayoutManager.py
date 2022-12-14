@@ -54,7 +54,8 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.pushWindow(window, topCon)
 
         self.log("Added window id: %d" % window.id)
-        self.con.command("[con_id=%d] focus" % self.masterId)
+        self.command.byId(self.masterId, "focus")
+        self.command.run()
 
 
     def windowRemoved(self, event, window):
@@ -66,6 +67,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.popWindow(window, topCon)
 
         self.log("Removed window id: %d" % window.id)
+        self.command.run()
 
 
     def windowFocused(self, event, window):
@@ -93,6 +95,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             self.toggleStackLayout()
         elif command == "nop layman stackside toggle":
             self.toggleStackSide()
+        self.command.run()
 
 
     def isExcluded(self, window):
@@ -118,19 +121,19 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def setMasterWidth(self):
         if self.masterWidth is not None:
-            self.con.command("[con_id=%s] resize set %s 0 ppt" % (self.masterId, self.masterWidth))
+            self.command.byId(self.masterId, "resize set %s 0 ppt" % self.masterWidth)
             self.logCaller("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
     def setStackLayout(self):
         if len(self.stack) != 0 and self.stackId != 0:
-            self.con.command("[con_id=%d] layout %s" % (self.stackId, self.stackLayout))
+            self.command.byId(self.stackId, "layout %s" % self.stackLayout)
 
 
     def moveWindow(self, moveId, targetId):
-        self.con.command("[con_id=%d] mark --add move_target" % targetId)
-        self.con.command("[con_id=%d] move window to mark move_target" % moveId)
-        self.con.command("[con_id=%d] unmark move_target" % targetId)
+        self.command.byId(targetId, "mark --add move_target")
+        self.command.byId(moveId, "move window to mark move_target")
+        self.command.raw("unmark move_target")
         self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
 
 
@@ -150,25 +153,27 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             else:
                 self.pushMasterToStack(window) 
         self.setStackSide()
+        self.command.run()
 
 
     def initMaster(self, window):
         self.masterId = window.id
-        self.con.command("[con_id=%d] split none, layout %s" % (self.masterId, "splith"))
+        self.command.byId(self.masterId, "split none, layout %s" % "splith")
 
 
     def initStack(self, window):
-        self.con.command("[con_id=%d] split none, layout splith" % self.masterId)
+        self.command.byId(self.masterId, "split none, layout splith")
         self.moveWindow(window.id, self.masterId)
-        self.con.command("[con_id=%d] split vertical, layout %s" % (self.masterId, self.stackLayout))
+        self.command.byId(self.masterId, "split vertical, layout %s" % self.stackLayout)
         self.stack.append(self.masterId)
+        self.command.run()
         self.stackId = self.getConById(self.masterId).parent.id
         self.masterId = window.id
         self.setStackSide()
 
 
     def pushMasterToStack(self, window):
-        self.con.command("[con_id=%d] split none, layout splith" % self.masterId)
+        self.command.byId(self.masterId, "split none, layout splith")
         self.moveWindow(window.id, self.masterId)
         self.stack.append(self.masterId)
         self.moveWindow(self.masterId, self.stackId)
@@ -214,12 +219,14 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             topIndex = -1
 
         # Move the previous master to top of stack
+        self.command.run()
         stackCon = self.getConById(windowId).parent
         while stackCon is not None and stackCon.nodes[topIndex].id != windowId:
             self.con.command("[con_id=%d] move %s" % (windowId, moveDirection))
             stackCon = self.getConById(windowId).parent
             if stackCon.id != self.stackId:
                 self.moveWindow(windowId, self.stackId)
+                self.command.run()
                 stackCon = self.getConById(self.stackId)
 
 
@@ -229,12 +236,16 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         self.log("Master removed, popping %d from stack." % self.masterId)
         if len(leaves) == 1:
             # Stack empty, make last window master
-            self.con.command("[con_id=%d] layout splith" % self.masterId)
+            self.command.byId(self.masterId, "layout splith")
             self.moveWindow(self.masterId, self.workspaceId)
             self.stack.clear()
             self.stackId = 0
         else:
             moveDirection = "left" if self.stackSide == "right" else "right"
+            
+            # Run buffered commands before looping
+            self.command.run()
+
             try:
                 while self.getConById(self.masterId).parent.id == self.stackId:
                     self.con.command("[con_id=%d] move %s" % (self.masterId, moveDirection))
@@ -293,7 +304,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
         # Apply the new stack layout
         if len(self.stack) != 0:
-            self.con.command("[con_id=%d] layout %s" % (self.stack[0], self.stackLayout))
+            self.command.byId(self.stack[0], "layout %s" % self.stackLayout)
             self.log("Changed stackLayout to %s" % self.stackLayout)
 
 
@@ -311,9 +322,9 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
         moveToLeft = stackCon.rect.x > masterCon.rect.x and self.stackSide == "left"
 
         if stackCon is not None and masterCon is not None:
-            self.con.command("[con_id=%d] layout splith" % self.masterId)
+            self.command.byId(self.masterId, "layout splith")
             if moveToLeft or moveToRight:
-                self.con.command("[con_id=%d] swap container with con_id %d" % (self.stackId, self.masterId))
+                self.command.byId(self.stackId, "swap container with con_id %d" % self.masterId)
         self.setMasterWidth()
 
 
