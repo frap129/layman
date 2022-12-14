@@ -118,7 +118,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
     def setMasterWidth(self):
         if self.masterWidth is not None:
-            self.con.command("[con_id=%s] resize set %s 0 ppt" % (self.masterId, self.masterWidth))
+            self.con.command("[con_id=%s] resize set width %s ppt" % (self.masterId, self.masterWidth))
             self.logCaller("Set window %d width to %d" % (self.masterId, self.masterWidth))
 
 
