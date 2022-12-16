@@ -213,8 +213,15 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             moveDirection = "right"
             topIndex = -1
 
+        # Get stack container
+        try:
+            stackCon = self.getConById(windowId).parent
+        except AttributeError:
+            # Window not in stack
+            self.moveWindow(windowId, self.stack[0])
+            stackCon = self.getConById(windowId).parent
+
         # Move the previous master to top of stack
-        stackCon = self.getConById(windowId).parent
         while stackCon is not None and stackCon.nodes[topIndex].id != windowId:
             self.con.command("[con_id=%d] move %s" % (windowId, moveDirection))
             stackCon = self.getConById(windowId).parent
