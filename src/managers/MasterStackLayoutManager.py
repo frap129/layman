@@ -140,7 +140,7 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
             return;
 
         self.log("Arranging untrackedWindows")
-        untracked = [x for x in reversed(leaves) if x.id not in self.stack or x.id != self.masterId]
+        untracked = [x for x in reversed(leaves) if x.id not in self.stack and x.id != self.masterId]
         for window in untracked:
             if self.stackId == 0:
                 if self.masterId == 0:
