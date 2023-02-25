@@ -32,6 +32,7 @@ from .managers import WorkspaceLayoutManager
 from .managers import MasterStackLayoutManager
 from .managers import AutotilingLayoutManager
 from .managers import GridLayoutManager
+from .managers import NStacksLayoutManager
 
 
 class Layman:
@@ -256,6 +257,7 @@ class Layman:
         self.userLayouts["AutotilingLayoutManager"] = AutotilingLayoutManager
         self.userLayouts["MasterStackLayoutManager"] = MasterStackLayoutManager
         self.userLayouts["GridLayoutManager"] = GridLayoutManager
+        self.userLayouts["NStacksLayoutManager"] = NStacksLayoutManager
 
         # Get user provided layouts
         layoutPath = os.path.dirname(utils.getConfigPath())
