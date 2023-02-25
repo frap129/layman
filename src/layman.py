@@ -24,6 +24,8 @@ import os
 from setproctitle import setproctitle
 import shutil
 
+from .server import MessageServer
+
 from . import utils
 from . import config
 from .managers import WorkspaceLayoutManager
@@ -159,8 +161,8 @@ class Layman:
     """
     Binding Events
 
-    The following function is called in response to any binding event and handles interpreting
-    the binding command or passing it to the intended workspace layout manager.
+    The following functions are called in response to any binding event or message and handles
+    interpreting the binding command or passing it to the intended workspace layout manager.
     """
 
     def onBinding(self, _, event):
@@ -168,24 +170,33 @@ class Layman:
         command = event.ipc_data["binding"]["command"].strip()
         if "nop layman" in command:
             for command in command.split(";"):
-                command = command.strip()
+                command = command.replace("nop layman ", '').strip()
                 workspace = utils.findFocusedWorkspace(self.cmdConn)
-                if "nop layman"in command and not self.isExcluded(workspace):
+                if not self.isExcluded(workspace):
                     self.handleCommand(workspace, command)
                 else:
                     self.cmdConn.command(command)
 
 
+    def onCommand(self, command):
+        for command in command.split(";"):
+            command = command.strip()
+            workspace = utils.findFocusedWorkspace(self.cmdConn)
+            if not self.isExcluded(workspace):
+                self.handleCommand(workspace, command)
+            else:
+                self.cmdConn.command(command)
+
+
     def handleCommand(self, workspace, command):
         # Handle movement commands
-        if "nop layman move" in command and not self.managers[workspace.num].overridesMoveBinds:
-            moveCmd = command.replace("nop layman ", '')
+        if "move" in command and not self.managers[workspace.num].overridesMoveBinds:
             self.cmdConn.command(moveCmd)
             self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
             return
 
         # Handle reload command
-        if command == "nop layman reload":
+        if command == "reload":
             # Get user config options
             self.options = config.LaymanConfig(self.cmdConn, utils.getConfigPath())
             self.fetchLayouts()
@@ -193,8 +204,8 @@ class Layman:
             return
 
         # Handle wlm creation commands
-        if "nop layman layout " in command:
-            shortName = command.split(' ')[-1]
+        if "layout" in command:
+            shortName = command.split(' ')[1]
             name = self.getLayoutNameByShortName(shortName)
             layout = getattr(self.userLayouts[name], name)
             self.managers[workspace.num] = layout(self.cmdConn, workspace, self.options)
@@ -323,6 +334,7 @@ class Layman:
         self.fetchLayouts()
 
         # Set event callbacks
+        self.server = MessageServer(self.onCommand)
         self.eventConn = Connection()
         self.eventConn.on(Event.BINDING, self.onBinding)
         self.eventConn.on(Event.WINDOW_FOCUS, self.windowFocused)

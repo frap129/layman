@@ -79,19 +79,19 @@ class MasterStackLayoutManager(WorkspaceLayoutManager):
 
 
     def onBinding(self, command):
-        if command == "nop layman move up":
+        if command == "move up":
             self.moveUp()
-        elif command == "nop layman move down":
+        elif command == "move down":
             self.moveDown()
-        elif command == "nop layman rotate ccw" or command == "nop layman move left":
+        elif command == "rotate ccw" or command == "move left":
             self.rotateCCW()
-        elif command == "nop layman rotate cw" or command == "nop layman move right":
+        elif command == "rotate cw" or command == "move right":
             self.rotateCW()
-        elif command == "nop layman swap master":
+        elif command == "swap master":
             self.swapMaster()
-        elif command == "nop layman stack toggle":
+        elif command == "stack toggle":
             self.toggleStackLayout()
-        elif command == "nop layman stackside toggle":
+        elif command == "stackside toggle":
             self.toggleStackSide()
 
 

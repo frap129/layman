@@ -40,9 +40,25 @@ configuration, see the `config.toml` file in the root of this repo.
 
 Note, values configured for outputs will only apply to workspaces **created** on that output.
 
-The config can be reloaded at runtime with `nop layman reload` set on a bindsym. Note that this reloads the config, but
+The config can be reloaded at runtime with `layman reload`. Note that this reloads the config, but
 not the layout managers. Config changes for existing layouts won't take affect until the managers is reset with
-`nop layman layout <layout short name>`.
+`layman layout <layout short name>`.
+
+## Usage
+
+To start using layman, simply run `layman`. This is best done in your sway/i3 config, or a setup script.
+
+To send commands to layman, you can either bind `nop layman <command>` to a key, or execute `layman` again with arguments.
+You could bind `exec layman <command>` to a key, but using `nop` is prefered to avoid overhead.
+
+Commands:
+```
+move <up|down|left|right> # Passes movement to a WLM to hanldle, or back to sway/i3
+reload # Reloads config and user layouts
+layout <layout shortname> # Sets a new layout on the focused workspace
+```
+
+Layouts may add their own commands, refer to the layouts below for more commands.
 
 ## Layout Managers
 
@@ -66,9 +82,9 @@ containing the parent class from which all WLMs are derived.
 The `none` layout manager does not manage any windows. It exists as a reference implementation, and to allow users
 to disable layout management on a given workspace.
 
-Binding:
+Commands:
 ```
-bindym <your bind here> nop layman layout none # disable layout management on a workspace
+layman layout none # disable layout management on a workspace
 ```
 
 ### Autotiling
@@ -81,9 +97,9 @@ Config options:
 depthLimit: Max number of nested splits [0 means no limit]
 ```
 
-Binding:
+Commands:
 ```
-bindym <your bind here> nop layman layout Autotiling # set focused workspace's layout manager to Autotiling
+layman layout Autotiling # set focused workspace's layout manager to Autotiling
 ```
 
 ### Grid
@@ -94,9 +110,9 @@ Like autotiling, Grid splits window based on width/height ratio. It differs from
 the largest existing window, rather than the currently focused window. If multiple windows have the same size,
 Grid tries to split the left-most and top-most "largest" window. This results in a grid-like pattern.
 
-Binding:
+Commands:
 ```
-bindym <your bind here> nop layman layout Grid # set focused workspace's layout manager to Grid
+layman layout Grid # set focused workspace's layout manager to Grid
 ```
 ### MasterStack
 
@@ -124,16 +140,16 @@ stackLayout: String to control the layout of the stack ["splitv", "tabbed", "sta
 stackSide: String to control which side of the screen the stack is on ["right", "left"]
 ```
 
-Bindings:
+Commands:
 ```
-bindym <your bind here> nop layman layout MasterStack # set focused workspace's layout manager to MasterStack
-bindym <your bind here> nop layman swap master # swap focused window with master
-bindym <your bind here> nop layman rotate cw # rotate layout cw 1 window
-bindym <your bind here> nop layman rotate ccw # rotate layout ccw 1 window
-bindym <your bind here> nop layman move up # move focused winodw up 1 position in the stack
-bindym <your bind here> nop layman move down # move focused window down one position in the stack
-bindym <your bind here> nop layman stack toggle # toggles stack layout through splitv, tabbed, and stacking
-bindym <your bind here> nop layman stackside toggle # toggles stack side between left and right
+layman layout MasterStack # set focused workspace's layout manager to MasterStack
+layman swap master # swap focused window with master
+layman rotate cw # rotate layout cw 1 window
+layman rotate ccw # rotate layout ccw 1 window
+layman move up # move focused winodw up 1 position in the stack
+layman move down # move focused window down one position in the stack
+layman stack toggle # toggles stack layout through splitv, tabbed, and stacking
+layman stackside toggle # toggles stack side between left and right
 ```
 
 ### User Created Layouts
