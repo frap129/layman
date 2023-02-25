@@ -25,7 +25,6 @@ def main():
 
     # Write command if args were passed
     if len(sys.argv) > 1:
-        print(sys.argv)
         command = ' '.join(sys.argv).replace("%s " % sys.argv[0], '')
         pipe = open(PIPE, "w")
         pipe.write(command)

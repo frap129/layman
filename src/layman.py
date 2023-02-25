@@ -169,14 +169,8 @@ class Layman:
         # Handle chanined commands one at a time
         command = event.ipc_data["binding"]["command"].strip()
         if "nop layman" in command:
-            for command in command.split(";"):
-                command = command.replace("nop layman ", '').strip()
-                workspace = utils.findFocusedWorkspace(self.cmdConn)
-                if not self.isExcluded(workspace):
-                    self.handleCommand(workspace, command)
-                else:
-                    self.cmdConn.command(command)
-
+            command = command.replace("nop layman ", '').strip()
+            self.onCommand(command)
 
     def onCommand(self, command):
         for command in command.split(";"):

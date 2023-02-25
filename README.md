@@ -46,14 +46,14 @@ not the layout managers. Config changes for existing layouts won't take affect u
 
 ## Usage
 
-To start using layman, simply run `layman`. This is best done in your sway/i3 config, or a setup script.
+To start using layman, simply run `layman`. This is best done in your sway/i3 config.
 
 To send commands to layman, you can either bind `nop layman <command>` to a key, or execute `layman` again with arguments.
 You could bind `exec layman <command>` to a key, but using `nop` is prefered to avoid overhead.
 
 Commands:
 ```
-move <up|down|left|right> # Passes movement to a WLM to hanldle, or back to sway/i3
+move <up|down|left|right> # Passes movement to a WLM to handle, or back to sway/i3
 reload # Reloads config and user layouts
 layout <layout shortname> # Sets a new layout on the focused workspace
 ```

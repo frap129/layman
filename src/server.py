@@ -49,7 +49,7 @@ class MessageServer():
         except:
             "do nothing"
 
-        mkfifo(PIPE, 0o660)
+        mkfifo(PIPE)
         thread = Thread(target=self.readPipe)
         thread.start()
 
