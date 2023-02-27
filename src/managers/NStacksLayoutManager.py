@@ -31,7 +31,7 @@ class NStacksLayoutManager(WorkspaceLayoutManager):
     overridesMoveBinds = True
 
     class Stack(WorkspaceLayoutManager):
-        priority = 0
+        order = 0
         newOnTop = True
         maxCount = 0
         layout = "splitv"
@@ -47,14 +47,29 @@ class NStacksLayoutManager(WorkspaceLayoutManager):
                 # Don't duplicate window records
                 return
 
+            # Initialize stack if needed
+            if self.conId == 0:
+                self.conId = window.id
+                self.con.command("[con_id=%d] layout %s" % (self.conId, self.layout))
+                stackCon = self.getConById(self.conId)
+                window = stackCon.nodes[0]
+
+            stackCon = self.getConById(self.conId)
+            if stackCon.layout != self.layout:
+                self.con.command("[con_id=%d] layout %s" % (self.conId, self.layout))
+
             self.windowIds.append(window.id)
-            moveWindow(self.conn, window.id, self.conId)
-            if self.newOnTop:
+            moveWindow(self.con, window.id, self.conId)
+            if self.newOnTop and len(self.windowIds) > 1:
                 self.moveToTopOfStack(window.id)
 
-        def windowRemoved(self, event, window):
+        def windowRemoved(self, windowId):
             try:
-                self.windowIds.remove(window.id)
+                self.windowIds.remove(windowId)
+
+                # Reset stack if empty
+                if len(self.windowIds) == 0:
+                    self.conId = 0
             except:
                 # Not in stack
                 self.log("idk")
@@ -71,16 +86,16 @@ class NStacksLayoutManager(WorkspaceLayoutManager):
                 stackCon = self.getConById(windowId).parent
             except AttributeError:
                 # Window not in stack
-                self.moveWindow(windowId, self.stack[0])
+                self.moveWindow(windowId, self.windowIds[0])
                 stackCon = self.getConById(windowId).parent
 
             # Move the previous master to top of stack
             while stackCon is not None and stackCon.nodes[topIndex].id != windowId:
                 self.con.command("[con_id=%d] move %s" % (windowId, moveDirection))
                 stackCon = self.getConById(windowId).parent
-                if stackCon.id != self.stackId:
-                    self.moveWindow(windowId, self.stackId)
-                    stackCon = self.getConById(self.stackId)
+                if stackCon.id != self.conId:
+                    self.moveWindow(windowId, self.conId)
+                    stackCon = self.getConById(self.conId)
 
 
     def __init__(self, con, workspace, options):
@@ -90,7 +105,7 @@ class NStacksLayoutManager(WorkspaceLayoutManager):
 
         for i in range(self.stackCount):
             newStack = self.Stack(con, workspace, options)
-            newStack.priority = i
+            newStack.order = i
             self.stacks.append(newStack)
 
     def isExcluded(self, window):
@@ -114,10 +129,24 @@ class NStacksLayoutManager(WorkspaceLayoutManager):
         return False
 
 
+    def windowFocused(self, event, window):
+        topCon = self.getWorkspaceCon()
+
+        if len(topCon.nodes) < self.stackCount:
+            # New windows should be new stacks
+            self.con.command("[con_id=%d] layout none" % window.id)
+            self.con.command("[con_id=%d] layout splith" % topCon.id)
+
+
     def windowAdded(self, event, window):
         # Ignore excluded windows
         if self.isExcluded(window):
             return
+
+        topCon = self.getWorkspaceCon()
+
+        if len(topCon.nodes) < self.stackCount:
+            self.stacks[0].windowAdded(event, window)
 
 
     def windowRemoved(self, event, window):
@@ -129,3 +158,20 @@ class NStacksLayoutManager(WorkspaceLayoutManager):
         self.popWindow(window, topCon)
 
         self.log("Removed window id: %d" % window.id)
+
+
+    def popWindow(self, window, topCon):
+        leaves = topCon.leaves()
+        leafIds = []
+
+        for leaf in leaves:
+            leafIds.append(leaf.id)
+
+        leafIds = set(leafIds)
+
+        for stack in self.stacks:
+            missingWindows = list(set(stack.windowIds) - leafIds)
+            if len(missingWindows) > 0:
+                for id in missingWindows:
+                    stack.windowRemoved(id)
+                break
