@@ -67,6 +67,13 @@ class WorkspaceLayoutManager:
     def onBinding(self, command):
         pass
 
+    # moveWindow is a helper function for moving a window to a container
+    def moveWindow(self, moveId, targetId):
+        self.con.command("[con_id=%d] mark --add move_target" % targetId)
+        self.con.command("[con_id=%d] move window to mark move_target" % moveId)
+        self.con.command("[con_id=%d] unmark move_target" % targetId)
+        self.logCaller("Moved window %s to mark on window %s" % (moveId, targetId))
+
 
     # This log function includes the class name, workspace number, and the 
     # name of the function it is called by. This makes it useful for functions
