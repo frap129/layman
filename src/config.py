@@ -15,8 +15,14 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>. 
 """
-import tomli
+import sys
 from logging import exception
+
+if sys.version_info.major == 3 and sys.version_info.minor < 11:
+    import tomli as tomllib
+else:
+    import tomllib
+
 
 
 CONFIG_PATH = ".config/layman/config.toml"
@@ -38,7 +44,7 @@ class LaymanConfig():
     def parse(self):
         with open(self.configPath, "rb") as f:
             try:
-                return tomli.load(f)
+                return tomllib.load(f)
             except Exception as e:
                 exception(e)
                 return {}

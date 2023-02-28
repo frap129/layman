@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>. 
 """
 import sys
+from os import path
 
 from . import layman
 from .server import PIPE
@@ -25,10 +26,13 @@ def main():
 
     # Write command if args were passed
     if len(sys.argv) > 1:
-        command = ' '.join(sys.argv).replace("%s " % sys.argv[0], '')
-        pipe = open(PIPE, "w")
-        pipe.write(command)
-        pipe.close()
+        if path.isfile(PIPE):
+            command = ' '.join(sys.argv).replace("%s " % sys.argv[0], '')
+            pipe = open(PIPE, "w")
+            pipe.write(command)
+            pipe.close()
+        else:
+            print("Layman is not running, or failed to create pipe")
         exit()
 
     # Start layman

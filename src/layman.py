@@ -186,8 +186,8 @@ class Layman:
     def handleCommand(self, workspace, command):
         # Handle movement commands
         if "move" in command and not self.managers[workspace.num].overridesMoveBinds:
-            self.cmdConn.command(moveCmd)
-            self.log("Handling bind \"%s\" for workspace %d" % (moveCmd, workspace.num))
+            self.cmdConn.command(command)
+            self.log("Handling bind \"%s\" for workspace %d" % (command, workspace.num))
             return
 
         # Handle reload command

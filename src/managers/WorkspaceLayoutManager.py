@@ -67,6 +67,13 @@ class WorkspaceLayoutManager:
     def onBinding(self, command):
         pass
 
+    # moveContainer is a helper function for moving container to another container
+    def moveContainer(self, moveId, targetId):
+        self.con.command("[con_id=%d] mark --add move_target" % targetId)
+        self.con.command("[con_id=%d] move container to mark move_target" % moveId)
+        self.con.command("[con_id=%d] unmark move_target" % targetId)
+        self.logCaller("Moved container %s to mark on container %s" % (moveId, targetId))
+
     # moveWindow is a helper function for moving a window to a container
     def moveWindow(self, moveId, targetId):
         self.con.command("[con_id=%d] mark --add move_target" % targetId)
