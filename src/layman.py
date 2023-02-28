@@ -31,6 +31,7 @@ from . import config
 from .managers import WorkspaceLayoutManager
 from .managers import MasterStackLayoutManager
 from .managers import AutotilingLayoutManager
+from .managers import FibonacciLayoutManager
 from .managers import GridLayoutManager
 
 
@@ -254,6 +255,7 @@ class Layman:
         # Get builtin layouts
         self.userLayouts["WorkspaceLayoutManager"] = WorkspaceLayoutManager
         self.userLayouts["AutotilingLayoutManager"] = AutotilingLayoutManager
+        self.userLayouts["FibonacciLayoutManager"] = FibonacciLayoutManager
         self.userLayouts["MasterStackLayoutManager"] = MasterStackLayoutManager
         self.userLayouts["GridLayoutManager"] = GridLayoutManager
 
