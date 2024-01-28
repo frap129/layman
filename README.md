@@ -74,7 +74,7 @@ bindsym $mod+Shift+Up nop layman move up
 bindsym $mod+Shift+Right nop layman move right
 ```
 
-The `src/mananagers/` directoy contains files that each hold an implementation of a WLM, with `WorkspaceLayoutManager.py`
+The `src/managers/` directory contains files that each hold an implementation of a WLM, with `WorkspaceLayoutManager.py`
 containing the parent class from which all WLMs are derived.
 
 ### none
