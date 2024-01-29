@@ -17,7 +17,9 @@ layman. If not, see <https://www.gnu.org/licenses/>.
 """
 import inspect
 
-from ..config import KEY_DEBUG
+import i3ipc
+
+from ..config import KEY_DEBUG, LaymanConfig
 
 
 class WorkspaceLayoutManager:
@@ -27,8 +29,17 @@ class WorkspaceLayoutManager:
     overridesMoveBinds = False # Should window movement commands be sent as binds
     supportsFloating = False # Should windowFloating be used, or treated as Added/Removed
 
+    con: i3ipc.Connection
+    workspaceId: int
+    workspaceName: str
+
     # These are the functions you should override to implement a WLM.
-    def __init__(self, con, workspace, options):
+    #
+    # Parameters:
+    # con (i3ipc.Connection): An i3ipc connection for executing commands.
+    # workspace (i3ipc.WorkspaceReply): The workspace the layout manager is associated with.
+    # options (LaymanConfig): The loaded config file used for option defaults.
+    def __init__(self, con: i3ipc.Connection, workspace: i3ipc.WorkspaceReply, options: LaymanConfig):
         self.con = con
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
