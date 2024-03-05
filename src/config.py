@@ -13,11 +13,11 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-layman. If not, see <https://www.gnu.org/licenses/>. 
+layman. If not, see <https://www.gnu.org/licenses/>.
 """
-import tomli
 from logging import exception
 
+import tomli
 
 CONFIG_PATH = ".config/layman/config.toml"
 
@@ -73,7 +73,7 @@ class LaymanConfig():
                 except KeyError:
                     pass
 
-            # If output config doesn't have the key, falback to default
+            # If output config doesn't have the key, fallback to default
             try:
                 value = self.configDict[TABLE_LAYMAN][key]
             except KeyError:

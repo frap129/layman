@@ -5,12 +5,12 @@
 # values for options not set in a [workspace] or [output] section.
 [layman]
 defaultLayout = "none"	# The default WLM to assign to a workspace
-excludedWorkspaces = []	# Numbers of workspaces to be excuded
+excludedWorkspaces = []	# Numbers of workspaces to be excluded
 excludedOutputs = []	# Names of outputs to be excuded
 debug = false			# Enable logging debug messages globaly
 depthLimit = 0			# Autotiling: Default depth limit (disabled) for all workspaces
 stackLayout = "splitv"	# MasterStack: Default stack layout for all workspaces
-stackSidet = "right"	# MasterStack: Default stack position for all workspaces
+stackSide = "right"	# MasterStack: Default stack position for all workspaces
 masterWidth = 50		# MasterStack: Default master width for all workspaces
 
 

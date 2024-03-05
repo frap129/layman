@@ -13,36 +13,17 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-layman. If not, see <https://www.gnu.org/licenses/>. 
+layman. If not, see <https://www.gnu.org/licenses/>.
 """
-from os import unlink, mkfifo
-from queue import Queue
+from os import mkfifo, unlink
 from threading import Thread
 
 PIPE = "/tmp/layman.pipe"
-
-class MessageQueue(Queue):
-    def __init__(self, maxsize=0):
-        super().__init__(maxsize=0)
-        self.on_change_listeners = []
-
-    def _put(self, msg):
-        # Add to queue
-        super()._put(msg)
-
-        # Run any listeners on a separate thread
-        for listener in self.on_change_listeners:
-            listener(msg)
-
-    def registerListener(self, listener):
-        self.on_change_listeners.append(listener)
 
 class MessageServer():
 
     def __init__(self, callback):
         self.callback = callback
-        self.queue = MessageQueue()
-        self.queue.registerListener(callback)
 
         try:
             unlink(PIPE)
@@ -56,5 +37,4 @@ class MessageServer():
     def readPipe(self):
         while True:
             with open(PIPE) as fifo:
-                self.queue.put(fifo.read())
-
+                self.callback(fifo.read())

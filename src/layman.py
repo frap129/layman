@@ -16,22 +16,21 @@ A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License along with
 layman. If not, see <https://www.gnu.org/licenses/>. 
 """
-from i3ipc import Event, Connection
-from importlib.machinery import SourceFileLoader
 import inspect
 import logging
 import os
-from setproctitle import setproctitle
 import shutil
+from importlib.machinery import SourceFileLoader
+from typing import cast
 
+from i3ipc import Connection, Event, WindowEvent
+from i3ipc.events import IpcBaseEvent
+from setproctitle import setproctitle
+
+from . import config, utils
+from .managers import (AutotilingLayoutManager, GridLayoutManager,
+                       MasterStackLayoutManager, WorkspaceLayoutManager)
 from .server import MessageServer
-
-from . import utils
-from . import config
-from .managers import WorkspaceLayoutManager
-from .managers import MasterStackLayoutManager
-from .managers import AutotilingLayoutManager
-from .managers import GridLayoutManager
 
 
 class Layman:
@@ -49,7 +48,8 @@ class Layman:
     window::new, window::focus, window::close, window::move, and window::floating.
     """
 
-    def windowCreated(self, _, event):
+    def windowCreated(self, _, event: IpcBaseEvent):
+        event = cast(WindowEvent, event)
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -62,7 +62,8 @@ class Layman:
         self.dispatchToManager(event, window, workspace)
 
 
-    def windowFocused(self, _, event):
+    def windowFocused(self, _, event: IpcBaseEvent):
+        event = cast(WindowEvent, event)
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -74,7 +75,8 @@ class Layman:
         # Pass command to the appropriate manager
         self.dispatchToManager(event, window, workspace)
 
-    def windowClosed(self, _, event):
+    def windowClosed(self, _, event: IpcBaseEvent):
+        event = cast(WindowEvent, event)
         # Try to find workspace by locating where the window is recorded
         workspaces = []
         for num in self.workspaceWindows:
@@ -97,7 +99,8 @@ class Layman:
         self.dispatchToManager(event, window, workspace)
 
 
-    def windowMoved(self, _, event):
+    def windowMoved(self, _, event: IpcBaseEvent):
+        event = cast(WindowEvent, event)
         window = utils.findFocusedWindow(self.cmdConn)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 
@@ -120,7 +123,8 @@ class Layman:
                     self.dispatchToManager(event, window, workspace)
 
 
-    def windowFloating(self, _, event):
+    def windowFloating(self, _, event: IpcBaseEvent):
+        event = cast(WindowEvent, event)
         window = self.cmdConn.get_tree().find_by_id(event.container.id)
         workspace = utils.findFocusedWorkspace(self.cmdConn)
 

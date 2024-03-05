@@ -13,29 +13,40 @@ WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License along with
-layman. If not, see <https://www.gnu.org/licenses/>. 
+layman. If not, see <https://www.gnu.org/licenses/>.
 """
 import inspect
 
-from ..config import KEY_DEBUG
+import i3ipc
+
+from ..config import KEY_DEBUG, LaymanConfig
+
 
 class WorkspaceLayoutManager:
     # These properties should be overriden to configure your WLM as
-    # Needed
+    # needed.
     shortName = "none"
     overridesMoveBinds = False # Should window movement commands be sent as binds
     supportsFloating = False # Should windowFloating be used, or treated as Added/Removed
 
-    # These are the functions you should override for to implement a
-    # WLM. 
-    def __init__(self, con, workspace, options):
+    con: i3ipc.Connection
+    workspaceId: int
+    workspaceName: str
+
+    # These are the functions you should override to implement a WLM.
+    #
+    # Parameters:
+    # con (i3ipc.Connection): An i3ipc connection for executing commands.
+    # workspace (i3ipc.WorkspaceReply): The workspace the layout manager is associated with.
+    # options (LaymanConfig): The loaded config file used for option defaults.
+    def __init__(self, con: i3ipc.Connection, workspace: i3ipc.WorkspaceReply, options: LaymanConfig):
         self.con = con
         self.workspaceId = workspace.ipc_data["id"]
         self.workspaceNum = workspace.num
         self.debug = options.getForWorkspace(self.workspaceNum, KEY_DEBUG)
 
 
-    # windowAdded is called when a new window is added to the workpsace,
+    # windowAdded is called when a new window is added to the workspace,
     # either by being created on the workspace or moved to it from another.
     def windowAdded(self, event, window):
         pass
@@ -47,7 +58,7 @@ class WorkspaceLayoutManager:
         pass
 
 
-    # windowFocused is called when a window on the workpsace is focused.
+    # windowFocused is called when a window on the workspace is focused.
     def windowFocused(self, event, window):
         pass
 
@@ -57,7 +68,7 @@ class WorkspaceLayoutManager:
     def windowMoved(self, event, window):
         pass
 
-    # windowFloating is called when a windows floating state is toggled.
+    # windowFloating is called when a window's floating state is toggled.
     def windowFloating(self, event, window):
         pass
 
@@ -92,7 +103,7 @@ class WorkspaceLayoutManager:
             print(("%s %d: %s: %s" % (self.shortName, self.workspaceNum, inspect.stack()[1][3], msg)))
 
 
-    # This log function includes the class name, workspace number, and the 
+    # This log function includes the class name, workspace number, and the
     # name of the function 2 calls up. This makes it useful for helper
     # functions that get called by event handlers
     def logCaller(self, msg):
